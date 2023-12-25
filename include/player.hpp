@@ -1,6 +1,7 @@
 #ifndef PLAYER_HPP_INCLUDED
 #define PLAYER_HPP_INCLUDED
 #include <string>
+#include <vector>
 #include "card.hpp"
 using namespace std;
 

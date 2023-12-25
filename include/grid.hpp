@@ -1,7 +1,7 @@
 #ifndef GRID_HPP_INCLUDED
 #define GRID_HPP_INCLUDED
 #include <vector>
-#include "Player.hpp"
+#include "player.hpp"
 using namespace std;
 
 enum GRID_TYPE{
