@@ -69,10 +69,111 @@ void Game::playerGetChance(Player& player) {
     chanceCard.getStatement() << endl;
 }
 
-void Game::playerMove(Player& player, int steps) {
+void Game::playerGetDensity(Player& player) {
+     ;
+}
 
+void Game::handlePartyEvent(Player& player, int partyId){
+     int playerParty = player.getParty();
+     if (partyId == playerParty) {
+          cout << "支付 500 政治獻金，可以提升政黨階級。" << endl;
+          cout << "輸入 Y 支付，輸入 N 放棄。" << endl;
+          char choice; cin >> choice;
+          if (choice == 'Y' || choice == 'y') {
+               player.addMoney(-500);
+               player.setPartyLevel(player.getPartyLevel() + 1);
+               cout << "你提升了政黨階級，目前的階級為：" << player.getPartyLevel() << endl;
+          } else {
+               cout << "你放棄了提升政黨階級。" << endl;
+          }
+     } else {
+          string partyName = (partyId == BLUE_PARTY ? "國名黨" : "民進黨");
+          if (playerParty == 0) {
+               cout << "支付 500 政治獻金，可以加入" << partyName << endl;
+          } else {
+               cout << "你現在已經有政黨了，但你仍然可以支付政治獻金轉換政黨。" << endl;
+               cout << "支付 500 政治獻金，可以加入" << partyName << endl;
+          }
+          cout << "輸入 Y 支付，輸入 N 放棄。" << endl;
+          char choice; cin >> choice;
+          if (choice == 'Y' || choice == 'y') {
+               player.addMoney(-500);
+               player.setParty(partyId);
+               player.setPartyLevel(1);
+               cout << "你加入了政黨，目前的階級為：" << player.getPartyLevel() << endl;
+          } else {
+               cout << "你放棄了加入政黨。" << endl;
+          }
+     }
+}
+
+void Game::playerTurn(Player& player) {
+     string playerName = player.getName();
+     cout << playerName << "'s turn." << endl;
+     
+     // check jail duration
+     int playerJailDuration = player.getJailDuration();
+     if (playerJailDuration > 0) {
+         cout << playerName << " is in jail, you can't move." << endl;
+         player.setJailDuration(playerJailDuration - 1);
+         return;
+     }
+
+     cout << "Enter a number to throw a dice:" << endl;
+     int dice_seed; cin >> dice_seed;
+     int step = rand() % 6; // throw a dice
+     player.move(step);
+
+     int playerPosition = player.getLocation();
+     int gridType = map[playerPosition].getType();
+
+     switch (gridType) {
+           case START_GRID:
+                cout << "You are at the start grid." << endl;
+                player.addMoney(2000);
+                break;
+           case BLUE_PARTY:
+                cout << "You are at the blue party." << endl;
+                handlePartyEvent(player, BLUE_PARTY);
+                break;
+           case GREEN_PARTY:
+                cout << "You are at the green party." << endl;
+                handlePartyEvent(player, GREEN_PARTY);
+                break;
+           case CHANCE_GRID:
+                cout << "You are at the chance grid." << endl;
+                playerGetChance(player);
+                break;
+           case DENSITY_GRID:
+                cout << "You are at the density grid." << endl;
+                playerGetDensity(player);
+                break;
+           case JAIL_GRID:
+                cout << "You are at the jail grid. Stop move for 2 turns." << endl;
+                player.setJailDuration(2);
+                break;
+           case REAL_ESTATE:
+                cout << "You are at the real estate grid." << endl;
+                break;
+           default:
+                cout << "You are at the unknown grid." << endl;
+                break;
+      }
+
+      cout << playerName << "'s turn end." << endl;
 }
 
 void Game::run() {
      cout << "Starting the game..." << endl;
+     if (players.empty()) {
+          cout << "No player." << endl;
+          return;
+     }
+     for (int Round=1; ; Round++) {
+          printf("Round %d\n", Round);
+          for (auto &player : this->players) {
+               playerTurn(player);
+               break;
+          }
+     }
 }

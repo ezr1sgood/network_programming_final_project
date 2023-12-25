@@ -33,3 +33,7 @@ int Grid::getLevel() {
 int Grid::getPrice() {
     return price;
 }
+
+int Grid::getType() {
+    return type;
+}

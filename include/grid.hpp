@@ -28,5 +28,6 @@ public:
     int getTex();
     int getLevel();
     int getPrice();
+    int getType();
 };
 #endif // GRID_HPP_INCLUDED

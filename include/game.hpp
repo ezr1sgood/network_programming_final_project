@@ -12,11 +12,9 @@
 
 using namespace std;
 
-
-
 class Game {
 private:
-    vector<int> players;
+    vector< Player > players;
     vector< Grid > map;
     vector< Card > chance;
     vector< Card > density;
@@ -26,6 +24,7 @@ public:
     void addPlayer(string name);
     void playerGetChance(Player& player);
     void playerGetDensity(Player& player);
-    void playerMove(Player& player, int steps);
+    void playerTurn(Player& player);
+    void handlePartyEvent(Player&, const int);
 };
 #endif // GAME_HPP_INCLUDED
