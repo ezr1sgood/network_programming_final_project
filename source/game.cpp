@@ -154,23 +154,23 @@ void Game::handlePartyEvent(Player& player, int partyId){
 }
 
 void Game::playerTurn(Player& player) {
-     string playerName = player.getName();
-     std::cout << playerName + "'s turn." << endl;
+     const string playerName = player.getName();
+     SendMessageToAllClients(playerName + "'s turn.");
      
      // check jail duration
      int playerJailDuration = player.getJailDuration();
      if (playerJailDuration > 0) {
-         std::cout << playerName << " is in jail, you can't move." << endl;
+         SendMessageToAllClients(playerName + " 正在服刑，跳過一回合。");
          player.setJailDuration(playerJailDuration - 1);
          return;
      }
 
-     std::cout << "Enter a string to throw a dice:" << endl;
-     string dice_seed; cin >> dice_seed;
+     SendMessageToClient("Enter a string to throw a dice:");
+     string dice_seed = ReadMessageFromClient();
      int sum = accumulate(dice_seed.begin(), dice_seed.end(), 0);
      srand(sum);
-     int step = rand() % 6 + 1; // throw a dice
 
+     int step = rand() % 6 + 1; // throw a dice
      int playerOldPosition = player.getLocation();
 
      SendMessageToAllClients("Dice number is " + to_string(step));
@@ -180,45 +180,45 @@ void Game::playerTurn(Player& player) {
      int gridType = map[playerNowPosition].getType();
 
      if (playerOldPosition > playerNowPosition) {
-          SendMessageToAllClients(player.getName() + "經過了起點，獲得 2000 元！！");
+          SendMessageToAllClients(playerName + "經過了起點，獲得 2000 元！！");
           player.addMoney(2000);
      }
 
      switch (gridType) {
            case START_GRID:
-                SendMessageToAllClients(player.getName() + "抵達起點");
+                SendMessageToAllClients(playerName + "抵達起點");
                 player.addMoney(2000);
                 break;
            case BLUE_PARTY:
-                SendMessageToAllClients(player.getName() + "抵達藍營");
+                SendMessageToAllClients(playerName + "抵達藍營");
                 handlePartyEvent(player, BLUE_PARTY);
                 break;
            case GREEN_PARTY:
-                SendMessageToAllClients(player.getName() + "抵達綠營");
+                SendMessageToAllClients(playerName + "抵達綠營");
                 handlePartyEvent(player, GREEN_PARTY);
                 break;
            case CHANCE_GRID:
-                SendMessageToAllClients(player.getName() + "抵達機會");
+                SendMessageToAllClients(playerName + "抵達機會");
                 playerGetChance(player);
                 break;
            case DENSITY_GRID:
-                SendMessageToAllClients(player.getName() + "抵達命運");
+                SendMessageToAllClients(playerName + "抵達命運");
                 playerGetDensity(player);
                 break;
            case JAIL_GRID:
-                SendMessageToAllClients(player.getName() + "被關進監獄 QQ");
+                SendMessageToAllClients(playerName + "被關進監獄 QQ");
                 player.setJailDuration(2);
                 break;
            case REAL_ESTATE:
-                SendMessageToAllClients(player.getName() + "抵達房地產");
+                SendMessageToAllClients(playerName + "抵達房地產");
                 break;
            default:
                 std::cerr << "You are at the unknown grid." << endl;
                 break;
       }
 
-      std::cout << playerName << "'s turn end." << endl;
-      std::cout << "--------------------------\n";
+      SendMessageToAllClients(playerName + "'s turn end.");
+      SendMessageToAllClients("--------------------------");
 }
 
 void Game::run() {
