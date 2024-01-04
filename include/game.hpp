@@ -26,5 +26,12 @@ public:
     void playerGetDensity(Player& player);
     void playerTurn(Player& player);
     void handlePartyEvent(Player&, const int);
+    
+    void showStatus() {
+        cout << "Players: " << endl;
+        for (auto &player : players) {
+            player.showStatus();
+        }
+    }
 };
 #endif // GAME_HPP_INCLUDED

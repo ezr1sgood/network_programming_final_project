@@ -55,6 +55,10 @@ Game::Game() {
     });
 }
 
+void Game::addPlayer(string name) {
+     players.push_back(Player(name));
+}
+
 void Game::playerGetChance(Player& player) {
     if (chance.empty()) {
         cout << "No chance card." << endl;
@@ -119,9 +123,12 @@ void Game::playerTurn(Player& player) {
          return;
      }
 
-     cout << "Enter a number to throw a dice:" << endl;
-     int dice_seed; cin >> dice_seed;
-     int step = rand() % 6; // throw a dice
+     cout << "Enter a string to throw a dice:" << endl;
+     string dice_seed; cin >> dice_seed;
+     int sum = accumulate(dice_seed.begin(), dice_seed.end(), 0);
+     srand(sum);
+     int step = rand() % 6 + 1; // throw a dice
+     cout << "Dice number is " << step << endl;
      player.move(step);
 
      int playerPosition = player.getLocation();
@@ -161,6 +168,7 @@ void Game::playerTurn(Player& player) {
       }
 
       cout << playerName << "'s turn end." << endl;
+      cout << "--------------------------\n";
 }
 
 void Game::run() {
@@ -173,7 +181,7 @@ void Game::run() {
           printf("Round %d\n", Round);
           for (auto &player : this->players) {
                playerTurn(player);
-               break;
           }
+          break;
      }
 }

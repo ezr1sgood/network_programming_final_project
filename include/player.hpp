@@ -17,15 +17,15 @@ private:
 public:
     // Constructors
     Player();
-    Player(string name);
-    Player(Player& player);
+    Player(string);
+    Player(const Player&);
 
     // Operations
-    void addSkill(Card skill);
-    void addHelth(const int helth);
-    void addMoney(const int money);
-    void move(const int steps);
-    void setJailDuration(const int jail_duration);
+    void addSkill(Card);
+    void addHelth(const int);
+    void addMoney(const int);
+    void move(const int);
+    void setJailDuration(const int);
     void setParty(const int);
     void setPartyLevel(const int);
     
@@ -38,5 +38,8 @@ public:
     int getPartyLevel();
     bool getActive();
     string getName();
+
+    // show status
+    void showStatus();
 };
 #endif // PLAYER_HPP_INCLUDED

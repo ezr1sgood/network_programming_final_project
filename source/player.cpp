@@ -1,47 +1,41 @@
 #include "../include/player.hpp"
+#include <string>
+#include <iostream>
 #define mapSize 18
 
 // Constuctors
-Player::Player() {
-    name = "";
-    helth = 0;
-    money = 0;
-    party = 0;
-    party_level = 0;
-    jail_duration = 0;
-    active = true;
-}
+Player::Player() {}
 
 Player::Player(string name) {
-    name = name;
-    helth = 100;
-    money = 1000;
-    location = 0;
-    party = 0;
-    party_level = 0;
-    jail_duration = 0;
-    active = true;
+    this->name = name;
+    this->helth = 100;
+    this->money = 1000;
+    this->location = 0;
+    this->party = 0;
+    this->party_level = 0;
+    this->jail_duration = 0;
+    this->active = true;
 }
 
 // Copy constructor
-Player::Player(Player& player) {
-    name = player.name;
-    helth = player.helth;
-    money = player.money;
-    skills = player.skills;
+Player::Player(const Player& player) {
+    this->name = player.name;
+    this->helth = player.helth;
+    this->money = player.money;
+    this->skills = player.skills;
 }
 
 // Operations
 void Player::addSkill(Card skill) {
-    skills.push_back(skill);
+    this->skills.push_back(skill);
 }
 
-void Player::addHelth(const int helth) {
-    this->helth += helth;
+void Player::addHelth(const int val) {
+    this->helth += val;
 }
 
-void Player::addMoney(const int money) {
-    this->money += money;
+void Player::addMoney(const int val) {
+    this->money += val;
 }
 
 void Player::move(const int steps) {
@@ -49,16 +43,16 @@ void Player::move(const int steps) {
     this->location %= mapSize;
 }
 
-void Player::setJailDuration(const int jail_duration) {
-    this->jail_duration = jail_duration;
+void Player::setJailDuration(const int upd_duration) {
+    this->jail_duration = upd_duration;
 }
 
-void Player::setParty(const int party) {
-    this->party = party;
+void Player::setParty(const int _party) {
+    this->party = _party;
 }
 
-void Player::setPartyLevel(const int party_level) {
-    this->party_level = party_level;
+void Player::setPartyLevel(const int _party_level) {
+    this->party_level = _party_level;
 }
 
 
@@ -93,4 +87,16 @@ bool Player::getActive() {
 
 string Player::getName() {
     return name;
+}
+
+
+void Player::showStatus() {
+    cout << "Player\t\t" << this->getName() << endl;
+    cout << "Helth\t\t" << this->getHelth() << endl;
+    cout << "Money\t\t" << this->getMoney() << endl;
+    cout << "Location\t" << this->getLocation() << endl;
+    cout << "Party\t\t" << this->getParty() << endl;
+    cout << "Party level\t" << this->getPartyLevel() << endl;
+    cout << "Jail duration\t" << this->getJailDuration() << endl;
+    cout << "--------------------------------\n";
 }

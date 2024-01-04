@@ -1,7 +1,7 @@
 #ifndef GRID_HPP_INCLUDED
 #define GRID_HPP_INCLUDED
 #include <vector>
-#include "player.hpp"
+#include <string>
 using namespace std;
 
 enum GRID_TYPE{
@@ -21,8 +21,8 @@ private:
     int price, level, tex; // for real estate
 public:
     Grid(){};
-    Grid(string _name, int _type, int _price, int _tex); // initialize the real estate grid
-    Grid(string _name, int _type); // initialize the other grids
+    Grid(string name, int type, int price, int tex); // initialize the real estate grid
+    Grid(string name, int type); // initialize the other grids
     ~Grid(){};
     int getPayTex();
     int getTex();
