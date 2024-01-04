@@ -5,7 +5,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "include/game.hpp"
+#include "../include/game.hpp"
 
 using namespace std;
 
@@ -24,7 +24,14 @@ void sig_chld(int sig){
 
 void game(){
 
-    // Game* game = new Game();
+    cout << "Game server is started. Waiting players..." << endl;
+    // Game *game;
+    // game.addPlayer("Ben",1);
+    // game.addPlayer("Ryan",2);
+    // game.addPlayer("Jojo",3);
+    // game.run();
+    // game.showStatus();
+    // return 0;
 }
 
 int main() {

@@ -1,4 +1,8 @@
-PROGRAM		= game
+# sudo apt-get install graphviz
+# sudo apt-get install makefile2graph
+# makefile2graph | dot -Tpng -o makefile_graph.png
+PROGRAM		= server
+CLIENT		= client
 
 SDIR		:= source
 IDIR		:= include
@@ -20,24 +24,32 @@ else
 endif
 
 EXE			:= $(BDIR)/$(PROGRAM)
+CLIEXE			:= $(BDIR)/$(CLIENT)
 SRCS		:= $(wildcard $(SDIR)/*.cpp)
-OBJS		:= $(SRCS:$(SDIR)/%.cpp=$(ODIR)/%.o)
+SRCS		:= $(filter-out $(SDIR)/client.cpp,$(SRCS))
+OBJS		:= $(patsubst $(SDIR)/%.cpp,$(ODIR)/%.o,$(SRCS))
 DEPS		:= $(SRCS:$(SDIR)/%.cpp=$(ODIR)/%.d)
 
-all: run
+all: build
 
 build: $(EXE)
 
-run: $(EXE)
+server: $(EXE)
 	$<
+
+# client: $(CLIEXE)
+#	$<
 
 $(EXE): dirs $(OBJS)
 	$(CXX) $(OBJS) -o $@
-
+	$(CXX) $(ODIR)/client.o -o $(BDIR)/client
+	
 -include $(DEPS)
 
 $(ODIR)/%.o: $(SDIR)/%.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -MP -MMD -c $(SDIR)/client.cpp -o $(ODIR)/client.o
+
 
 dirs:
 	@mkdir -p $(BDIR) $(ODIR)
