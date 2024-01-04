@@ -18,9 +18,16 @@ private:
     vector< Grid > map;
     vector< Card > chance;
     vector< Card > density;
+    bool status; // 1: game is running, 0: game is over
 public:
     Game();
+    ~Game(){};
+    void SendMessageToClient(string message, int sockfd);
+    void SendMessageToAllClients(string message);
+    string ReadMessageFromClient(int sockfd);
+
     void run();
+    void victory(Player& player);
     void addPlayer(string name);
     void playerGetChance(Player& player);
     void playerGetDensity(Player& player);

@@ -3,9 +3,12 @@
 #include <iostream>
 #include <random>
 #include <chrono> 
+#include "game.hpp"
+#define MAP_SIZE 18
 
 Game::Game() {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    this->status = true;
     // initialize the chance cards
     chance = vector<Card>({
         Card("外役監啦，哈哈!", 
@@ -18,7 +21,7 @@ Game::Game() {
              "效果：指定一位玩家，令該玩家生命值減少 20"),
     });
 
-    shuffle(chance.begin(), chance.end(), std::default_random_engine(seed));
+    std::shuffle(chance.begin(), chance.end(), std::default_random_engine(seed));
 
     // initialize the density cards
     density = vector<Card>({
@@ -30,7 +33,7 @@ Game::Game() {
              "如果你沒有加入政黨，此命運對你無效。\n效果：你是教育部的臉書粉專小編，教育部亂拍影片遭到公眾撻伐，你被迫『具名』背鍋，身心受創，生命值減少 20。\nhttps://fongnews.net/political/83116/"),
     });
 
-    shuffle(density.begin(), density.end(), std::default_random_engine(seed));
+    std::shuffle(density.begin(), density.end(), std::default_random_engine(seed));
 
     // initialize the map
     map = vector<Grid>({
@@ -55,22 +58,47 @@ Game::Game() {
     });
 }
 
+// TODO: implement this function
+void Game::SendMessageToClient(string message, int sockfd = 0) {
+     std::cout << message << endl;
+}
+
+// TODO: remove brackets of for loop
+void Game::SendMessageToAllClients(string message) {
+     // for (auto &player : this->players) {
+          SendMessageToClient(message);
+     // }
+}
+
+// TODO: implement this function
+string Game::ReadMessageFromClient(int sockfd = 0) {
+     string message;
+     std::cin >> message;
+     return message;
+}
+
+void Game::victory(Player& player) {
+     for (auto &player : this->players) {
+          SendMessageToClient(player.getName() + "贏得了遊戲！");
+     }
+     exit(0);
+}
+
 void Game::addPlayer(string name) {
      players.push_back(Player(name));
 }
 
 void Game::playerGetChance(Player& player) {
     if (chance.empty()) {
-        cout << "No chance card." << endl;
+        cerr << "No chance card." << endl;
         return;
     }
     Card chanceCard = chance.back();
     chance.pop_back();
     player.addSkill(chanceCard);
 
-    cout << "You get a chance card: " << chanceCard.getName() << endl;
-    cout << 
-    chanceCard.getStatement() << endl;
+    SendMessageToClient("You get a chance card: " + chanceCard.getName());
+    SendMessageToClient(chanceCard.getStatement());
 }
 
 void Game::playerGetDensity(Player& player) {
@@ -79,109 +107,130 @@ void Game::playerGetDensity(Player& player) {
 
 void Game::handlePartyEvent(Player& player, int partyId){
      int playerParty = player.getParty();
+     string partyName = (partyId == BLUE_PARTY ? "國民黨" : "民進黨");
+     SendMessageToClient("你所在的格子為政黨格： " + partyName);
+     if (player.getMoney() < 500) {
+          SendMessageToClient("你的錢不夠支付政治獻金，無法提升政黨階級。");
+          return;
+     } 
+
      if (partyId == playerParty) {
-          cout << "支付 500 政治獻金，可以提升政黨階級。" << endl;
-          cout << "輸入 Y 支付，輸入 N 放棄。" << endl;
-          char choice; cin >> choice;
-          if (choice == 'Y' || choice == 'y') {
+          SendMessageToClient( "支付 500 政治獻金，可以提升政黨階級。");
+          SendMessageToClient( "輸入 Y 支付，輸入 N 放棄。");
+          std::string choice = ReadMessageFromClient();
+          // TODO: Maybe we can use while loop to check the input is "Y" neither "N".
+          
+          // convert choice to upper case.
+          std::transform(choice.begin(), choice.end(), choice.begin(), ::toupper);
+          if (choice == "Y") {
                player.addMoney(-500);
                player.setPartyLevel(player.getPartyLevel() + 1);
-               cout << "你提升了政黨階級，目前的階級為：" << player.getPartyLevel() << endl;
+               SendMessageToClient( "你提升了政黨階級，目前的階級為：" + to_string(player.getPartyLevel()));
           } else {
-               cout << "你放棄了提升政黨階級。" << endl;
+               SendMessageToClient( "你放棄了提升政黨階級。");
           }
      } else {
-          string partyName = (partyId == BLUE_PARTY ? "國名黨" : "民進黨");
           if (playerParty == 0) {
-               cout << "支付 500 政治獻金，可以加入" << partyName << endl;
+               SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName);
           } else {
-               cout << "你現在已經有政黨了，但你仍然可以支付政治獻金轉換政黨。" << endl;
-               cout << "支付 500 政治獻金，可以加入" << partyName << endl;
+               SendMessageToClient( "你現在已經有政黨了，但你仍然可以支付政治獻金轉換政黨。");
+               SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName);
           }
-          cout << "輸入 Y 支付，輸入 N 放棄。" << endl;
-          char choice; cin >> choice;
+          SendMessageToClient( "輸入 Y 支付，輸入 N 放棄。");
+          char choice; std::cin >> choice;
           if (choice == 'Y' || choice == 'y') {
                player.addMoney(-500);
                player.setParty(partyId);
                player.setPartyLevel(1);
-               cout << "你加入了政黨，目前的階級為：" << player.getPartyLevel() << endl;
+               SendMessageToClient( "你加入了政黨，目前的階級為：" + to_string(player.getPartyLevel()));
           } else {
-               cout << "你放棄了加入政黨。" << endl;
+               SendMessageToClient( "你放棄了加入政黨。");
           }
      }
 }
 
 void Game::playerTurn(Player& player) {
      string playerName = player.getName();
-     cout << playerName << "'s turn." << endl;
+     std::cout << playerName + "'s turn." << endl;
      
      // check jail duration
      int playerJailDuration = player.getJailDuration();
      if (playerJailDuration > 0) {
-         cout << playerName << " is in jail, you can't move." << endl;
+         std::cout << playerName << " is in jail, you can't move." << endl;
          player.setJailDuration(playerJailDuration - 1);
          return;
      }
 
-     cout << "Enter a string to throw a dice:" << endl;
+     std::cout << "Enter a string to throw a dice:" << endl;
      string dice_seed; cin >> dice_seed;
      int sum = accumulate(dice_seed.begin(), dice_seed.end(), 0);
      srand(sum);
      int step = rand() % 6 + 1; // throw a dice
-     cout << "Dice number is " << step << endl;
+
+     int playerOldPosition = player.getLocation();
+
+     SendMessageToAllClients("Dice number is " + to_string(step));
      player.move(step);
 
-     int playerPosition = player.getLocation();
-     int gridType = map[playerPosition].getType();
+     int playerNowPosition = player.getLocation();
+     int gridType = map[playerNowPosition].getType();
+
+     if (playerOldPosition > playerNowPosition) {
+          SendMessageToAllClients(player.getName() + "經過了起點，獲得 2000 元！！");
+          player.addMoney(2000);
+     }
 
      switch (gridType) {
            case START_GRID:
-                cout << "You are at the start grid." << endl;
+                SendMessageToAllClients(player.getName() + "抵達起點");
                 player.addMoney(2000);
                 break;
            case BLUE_PARTY:
-                cout << "You are at the blue party." << endl;
+                SendMessageToAllClients(player.getName() + "抵達藍營");
                 handlePartyEvent(player, BLUE_PARTY);
                 break;
            case GREEN_PARTY:
-                cout << "You are at the green party." << endl;
+                SendMessageToAllClients(player.getName() + "抵達綠營");
                 handlePartyEvent(player, GREEN_PARTY);
                 break;
            case CHANCE_GRID:
-                cout << "You are at the chance grid." << endl;
+                SendMessageToAllClients(player.getName() + "抵達機會");
                 playerGetChance(player);
                 break;
            case DENSITY_GRID:
-                cout << "You are at the density grid." << endl;
+                SendMessageToAllClients(player.getName() + "抵達命運");
                 playerGetDensity(player);
                 break;
            case JAIL_GRID:
-                cout << "You are at the jail grid. Stop move for 2 turns." << endl;
+                SendMessageToAllClients(player.getName() + "被關進監獄 QQ");
                 player.setJailDuration(2);
                 break;
            case REAL_ESTATE:
-                cout << "You are at the real estate grid." << endl;
+                SendMessageToAllClients(player.getName() + "抵達房地產");
                 break;
            default:
-                cout << "You are at the unknown grid." << endl;
+                std::cerr << "You are at the unknown grid." << endl;
                 break;
       }
 
-      cout << playerName << "'s turn end." << endl;
-      cout << "--------------------------\n";
+      std::cout << playerName << "'s turn end." << endl;
+      std::cout << "--------------------------\n";
 }
 
 void Game::run() {
-     cout << "Starting the game..." << endl;
      if (players.empty()) {
-          cout << "No player." << endl;
+          std::cerr << "No player." << endl;
           return;
      }
+     SendMessageToAllClients("Starting the game...");
      for (int Round=1; ; Round++) {
-          printf("Round %d\n", Round);
+          SendMessageToAllClients("Round " + to_string(Round));
           for (auto &player : this->players) {
                playerTurn(player);
           }
-          break;
+          if (Round == 20) {
+               SendMessageToAllClients("Game end.");
+               break;
+          }
      }
 }
