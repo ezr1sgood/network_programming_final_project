@@ -12,6 +12,7 @@ private:
     int party, party_level;
     int jail_duration;
     int user_id;
+    int sockfd;
     bool active; // active or not
     vector<Card> skills{};
     
@@ -37,6 +38,8 @@ public:
     int getJailDuration();
     int getParty();
     int getPartyLevel();
+    int getId();
+    int getSockfd();
     bool getActive();
     string getName();
 

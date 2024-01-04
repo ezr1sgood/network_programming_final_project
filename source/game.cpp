@@ -42,23 +42,23 @@ Game::Game() {
     // initialize the map
     map = vector<Grid>({
         Grid("起點", START_GRID),
-        Grid("陽明大學光復校區", REAL_ESTATE, 100, 33),
+        Grid("陽明大學光復校區", REAL_ESTATE, 200, 50),
         Grid("藍營總部", BLUE_PARTY),
-        Grid("BB", REAL_ESTATE, 100, 33),
+        Grid("清華大工地", REAL_ESTATE, 5, 1),
         Grid("機會", CHANCE_GRID),
-        Grid("DD", REAL_ESTATE, 100, 33),
-        Grid("苗栗國", REAL_ESTATE, 100, 33),
-        Grid("FF", REAL_ESTATE, 100, 33),
-        Grid("監獄", JAIL_GRID),
-        Grid("GG", REAL_ESTATE, 100, 33),
-        Grid("HH", REAL_ESTATE, 100, 33),
+        Grid("U2電影館", REAL_ESTATE, 100, 100),
+        Grid("苗栗國", REAL_ESTATE, 1000, 200),
+        Grid("新竹12億棒球場", REAL_ESTATE, 10000, 5000),
+        Grid("綠島監獄", JAIL_GRID),
+        Grid("台北101", REAL_ESTATE, 5000, 1000),
+        Grid("高雄愛情摩天輪", REAL_ESTATE, 2000, 4000),
         Grid("綠營總部", GREEN_PARTY),
-        Grid("JJ", REAL_ESTATE, 100, 33),
+        Grid("用愛發電發電廠", REAL_ESTATE, 100, 5),
         Grid("命運", CHANCE_GRID),
-        Grid("LL", REAL_ESTATE, 100, 33),
-        Grid("MM", REAL_ESTATE, 100, 33),
-        Grid("NN", REAL_ESTATE, 100, 33),
-        Grid("OO", REAL_ESTATE, 100, 33),
+        Grid("中巨蛋", REAL_ESTATE, 1000, 1200),
+        Grid("三立假新聞總部", REAL_ESTATE, 1000, 1),
+        Grid("立法院（猴子院）", REAL_ESTATE, 3000, 5000),
+        Grid("交大二餐小七", REAL_ESTATE, 100, 2000),
     });
 }
 
@@ -101,7 +101,7 @@ void Game::playerGetChance(Player& player) {
     chance.pop_back();
     player.addSkill(chanceCard);
 
-    SendMessageToClient("You get a chance card: " + chanceCard.getName());
+    SendMessageToClient("你得到了機會: " + chanceCard.getName());
     SendMessageToClient(chanceCard.getStatement());
 }
 
@@ -153,6 +153,56 @@ void Game::handlePartyEvent(Player& player, int partyId){
      }
 }
 
+void Game::handleRealEstateEvent(Player& player, Grid& grid) {
+     int ownerId = grid.getOwner();
+     int tex = grid.getPayTex();
+     int price = grid.getPrice();
+     int level = grid.getLevel();
+     int playerId = player.getId();
+     string playerName = player.getName();
+     int playerSockfd = player.getSockfd();
+
+     if (ownerId == 0) { // no owner
+          SendMessageToClient("你可以購買這塊土地，花費" + to_string(price) + "元。");
+          SendMessageToClient("輸入 Y 購買，輸入 N 放棄。");
+          std::string choice = ReadMessageFromClient();
+          if (choice == "Y" || choice == "y") {
+               if (player.getMoney() < price) {
+                    SendMessageToClient("你的錢不夠支付購買費用。");
+               } else {
+                    player.addMoney(-price);
+                    grid.setOwner(playerId);
+                    grid.setLevel(1);
+                    SendMessageToClient("你購買了這塊土地。");
+               }
+          }
+     } else {
+          Player &owner = players[ownerId-1];
+          int ownerSockfd = owner.getSockfd();
+          if (ownerId == playerId) { // own by player
+               SendMessageToClient("你已經擁有這塊土地了，花費" + to_string(tex) + "元升級。", playerSockfd);
+               if (player.getMoney() < tex) {
+                    SendMessageToClient("你的錢不夠支付升級費用。");
+               } else {
+                    SendMessageToClient("輸入 Y 升級，輸入 N 放棄。", playerSockfd);
+                    std::string choice = ReadMessageFromClient(playerSockfd);
+                    if (choice == "Y" || choice == "y") {
+                         player.addMoney(-tex);
+                         int currentLevel = grid.getLevel();
+                         grid.setLevel(currentLevel + 1);
+                         SendMessageToClient("你升級了這塊土地，目前的等級為：" + to_string(level));
+                    }
+               }
+          } else { // own by other player
+          std::cout << "ownerId: " << ownerId << endl;
+               SendMessageToClient("你必須支付" + to_string(tex) + "元給" + owner.getName() + "。", playerSockfd);
+               SendMessageToClient(playerName + "踏入了你的房地產，你獲得了" + to_string(tex) + "元。", ownerSockfd);
+               player.addMoney(-tex);
+               owner.addMoney(tex);
+          }
+     }
+}
+
 void Game::playerTurn(Player& player) {
      const string playerName = player.getName();
      SendMessageToAllClients(playerName + "'s turn.");
@@ -165,7 +215,7 @@ void Game::playerTurn(Player& player) {
          return;
      }
 
-     SendMessageToClient("Enter a string to throw a dice:");
+     SendMessageToClient("輸入一個字串作為骰子的隨機種子:");
      string dice_seed = ReadMessageFromClient();
      int sum = accumulate(dice_seed.begin(), dice_seed.end(), 0);
      srand(sum);
@@ -173,7 +223,7 @@ void Game::playerTurn(Player& player) {
      int step = rand() % 6 + 1; // throw a dice
      int playerOldPosition = player.getLocation();
 
-     SendMessageToAllClients("Dice number is " + to_string(step));
+     SendMessageToAllClients("骰到了 " + to_string(step) + " ！");
      player.move(step);
 
      int playerNowPosition = player.getLocation();
@@ -184,41 +234,40 @@ void Game::playerTurn(Player& player) {
           player.addMoney(2000);
      }
 
+     std::string gridName = map[playerNowPosition].getName();
+     SendMessageToAllClients(playerName + "抵達" + gridName + "。");
      switch (gridType) {
            case START_GRID:
-                SendMessageToAllClients(playerName + "抵達起點");
                 player.addMoney(2000);
                 break;
            case BLUE_PARTY:
-                SendMessageToAllClients(playerName + "抵達藍營");
                 handlePartyEvent(player, BLUE_PARTY);
                 break;
            case GREEN_PARTY:
-                SendMessageToAllClients(playerName + "抵達綠營");
                 handlePartyEvent(player, GREEN_PARTY);
                 break;
            case CHANCE_GRID:
-                SendMessageToAllClients(playerName + "抵達機會");
                 playerGetChance(player);
                 break;
            case DENSITY_GRID:
-                SendMessageToAllClients(playerName + "抵達命運");
                 playerGetDensity(player);
                 break;
            case JAIL_GRID:
-                SendMessageToAllClients(playerName + "被關進監獄 QQ");
                 player.setJailDuration(2);
                 break;
            case REAL_ESTATE:
-                SendMessageToAllClients(playerName + "抵達房地產");
+                handleRealEstateEvent(player, this->map[playerNowPosition]);
                 break;
            default:
                 std::cerr << "You are at the unknown grid." << endl;
                 break;
-      }
+     }
+}
 
-      SendMessageToAllClients(playerName + "'s turn end.");
-      SendMessageToAllClients("--------------------------");
+void Game::endTurn(Player& player) {
+     const string playerName = player.getName();
+     SendMessageToAllClients(playerName + "'s turn end.");
+     SendMessageToAllClients("--------------------------");
 }
 
 void Game::run() {
@@ -231,6 +280,7 @@ void Game::run() {
           SendMessageToAllClients("Round " + to_string(Round));
           for (auto &player : this->players) {
                playerTurn(player);
+               endTurn(player);
           }
           if (Round == 20) {
                SendMessageToAllClients("Game end.");

@@ -30,5 +30,10 @@ public:
     int getLevel();
     int getPrice();
     int getType();
+    int getOwner();
+
+    void setOwner(int);
+    void setLevel(int);
+    string getName();
 };
 #endif // GRID_HPP_INCLUDED

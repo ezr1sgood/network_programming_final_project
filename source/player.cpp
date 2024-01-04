@@ -24,6 +24,7 @@ Player::Player(const Player& player) {
     this->helth = player.helth;
     this->money = player.money;
     this->skills = player.skills;
+    this->user_id = player.user_id;
 }
 
 // Operations
@@ -80,6 +81,14 @@ int Player::getParty() {
 
 int Player::getPartyLevel() {
     return party_level;
+}
+
+int Player::getId() {
+    return user_id;
+}
+
+int Player::getSockfd() {
+    return sockfd;
 }
 
 bool Player::getActive() {

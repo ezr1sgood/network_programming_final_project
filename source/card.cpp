@@ -1,8 +1,8 @@
 #include "../include/card.hpp"
 
 Card::Card(string name, string statement) {
-    name = name;
-    statement = statement;
+    this->name = name;
+    this->statement = statement;
 }
 
 string Card::getName() {

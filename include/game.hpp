@@ -15,11 +15,11 @@ using namespace std;
 class Game {
 private:
     vector< Player > players;
-    vector< Grid > map;
     vector< Card > chance;
     vector< Card > density;
     bool status; // 1: game is running, 0: game is over
 public:
+    vector< Grid > map;
     Game();
     ~Game(){};
     void SendMessageToClient(string message, int sockfd);
@@ -32,7 +32,10 @@ public:
     void playerGetChance(Player& player);
     void playerGetDensity(Player& player);
     void playerTurn(Player& player);
-    void handlePartyEvent(Player&, const int);
+    void endTurn(Player& player);
+
+    void handlePartyEvent(Player&, const int partyType);
+    void handleRealEstateEvent(Player&, Grid&);
     
     void showStatus() {
         cout << "Players: " << endl;
