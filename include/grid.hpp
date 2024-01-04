@@ -19,6 +19,7 @@ private:
     string name;
     int type;
     int price, level, tex; // for real estate
+    int owner; // owner's id
 public:
     Grid(){};
     Grid(string name, int type, int price, int tex); // initialize the real estate grid

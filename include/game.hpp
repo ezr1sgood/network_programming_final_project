@@ -28,7 +28,7 @@ public:
 
     void run();
     void victory(Player& player);
-    void addPlayer(string name);
+    void addPlayer(string name, int id);
     void playerGetChance(Player& player);
     void playerGetDensity(Player& player);
     void playerTurn(Player& player);

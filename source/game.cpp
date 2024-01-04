@@ -26,11 +26,15 @@ Game::Game() {
     // initialize the density cards
     density = vector<Card>({
         Card("快步過馬路",
-             "效果：因為你在台灣快步走過馬路，導致視野死角，被機車撞到，生命值減少 20。"),
+             "因為你在台灣快步走過馬路，導致視野死角，被機車撞到。\n效果：生命值減少 20。"),
         Card("慢步過馬路",
-             "效果：因為你在台灣慢步走過馬路，引起大眾觀感不佳，政黨階級 -1。"),
+             "因為你在台灣慢步走過馬路，引起大眾觀感不佳。\n效果：政黨階級 -1。"),
         Card("背鍋俠",
-             "如果你沒有加入政黨，此命運對你無效。\n效果：你是教育部的臉書粉專小編，教育部亂拍影片遭到公眾撻伐，你被迫『具名』背鍋，身心受創，生命值減少 20。\nhttps://fongnews.net/political/83116/"),
+             "你是教育部的臉書粉專小編，教育部亂拍影片遭到公眾撻伐，你被迫『具名』背鍋，身心受創。\n效果：生命值減少 20。\nhttps://fongnews.net/political/83116/"),
+        Card("大撒幣",
+             "總統大選即將到來，政府決定補助私立大學學費 3.5 萬元，但花的不是他的錢，是你這個納稅人的錢。\n效果：你的金錢減少 500。"),
+        Card("中樂透",
+             "在小七無聊買個可爾必思沒事就中了 1000 萬元發票。\n效果：你的金錢增加 5000。")
     });
 
     std::shuffle(density.begin(), density.end(), std::default_random_engine(seed));
@@ -38,12 +42,12 @@ Game::Game() {
     // initialize the map
     map = vector<Grid>({
         Grid("起點", START_GRID),
-        Grid("AA", REAL_ESTATE, 100, 33),
+        Grid("陽明大學光復校區", REAL_ESTATE, 100, 33),
         Grid("藍營總部", BLUE_PARTY),
         Grid("BB", REAL_ESTATE, 100, 33),
         Grid("機會", CHANCE_GRID),
         Grid("DD", REAL_ESTATE, 100, 33),
-        Grid("EE", REAL_ESTATE, 100, 33),
+        Grid("苗栗國", REAL_ESTATE, 100, 33),
         Grid("FF", REAL_ESTATE, 100, 33),
         Grid("監獄", JAIL_GRID),
         Grid("GG", REAL_ESTATE, 100, 33),
@@ -84,8 +88,8 @@ void Game::victory(Player& player) {
      exit(0);
 }
 
-void Game::addPlayer(string name) {
-     players.push_back(Player(name));
+void Game::addPlayer(string name, int id) {
+     players.push_back(Player(name, id));
 }
 
 void Game::playerGetChance(Player& player) {

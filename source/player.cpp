@@ -6,7 +6,7 @@
 // Constuctors
 Player::Player() {}
 
-Player::Player(string name) {
+Player::Player(string name, int id) {
     this->name = name;
     this->helth = 100;
     this->money = 1000;
@@ -15,6 +15,7 @@ Player::Player(string name) {
     this->party_level = 0;
     this->jail_duration = 0;
     this->active = true;
+    this->user_id = id;
 }
 
 // Copy constructor

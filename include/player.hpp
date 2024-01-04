@@ -11,13 +11,14 @@ private:
     int helth, money, location;
     int party, party_level;
     int jail_duration;
+    int user_id;
     bool active; // active or not
     vector<Card> skills{};
     
 public:
     // Constructors
     Player();
-    Player(string);
+    Player(string name, int id);
     Player(const Player&);
 
     // Operations
