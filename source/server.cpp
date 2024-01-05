@@ -22,16 +22,14 @@ void sig_chld(int sig){
         return;
 }
 
-void game(){
-
-    cout << "Game server is started. Waiting players..." << endl;
-    // Game *game;
-    // game.addPlayer("Ben",1);
-    // game.addPlayer("Ryan",2);
-    // game.addPlayer("Jojo",3);
-    // game.run();
-    // game.showStatus();
-    // return 0;
+void game(char client_name[][32], int client_fd[], int client_number) {
+    cerr << "Game server started..." << endl;
+    Game game;
+    for (int i = 0; i < client_number; ++i) {
+        game.addPlayer(string(client_name[i]), client_fd[i]);
+    }
+    game.run();
+    game.showStatus();
 }
 
 int main() {
@@ -81,7 +79,7 @@ int main() {
         sprintf(client_name[0], "%s", recvline);
 
         bzero(&sendline, sizeof(sendline));
-        sprintf(sendline, "you are the room owner, select the number of the player(2~4).\n");
+        sprintf(sendline, "你是房主, 請輸入 2~4 的數字來決定有幾位玩家。\n");
         write(client_fd[0], sendline, strlen(sendline));
 
         bzero(&recvline, sizeof(recvline));
@@ -95,13 +93,12 @@ int main() {
             else{
 
                 bzero(&sendline, sizeof(sendline));
-                sprintf(sendline, "please choose the correct number of the player(2~4).\n");
+                sprintf(sendline, "請輸入正確的數字(2~4).\n");
                 write(client_fd[0], sendline, strlen(sendline));
             }
         }
         // Waiting for other users
         for (int i = 1; i < client_number; i++){
-
             client_len[i] = sizeof(client_address[i]);
             client_fd[i] = accept(listen_fd, (struct sockaddr *)&client_address[i], &client_len[i]);
 
@@ -110,29 +107,29 @@ int main() {
             sprintf(client_name[i], "%s", recvline);
 
             bzero(&sendline, sizeof(sendline));
-            sprintf(sendline, "you are the #%d user.\n", i + 1);
+            sprintf(sendline, "你是第 #%d 位玩家.\n", i + 1);
             write(client_fd[i], sendline, strlen(sendline));
         }
         
         signal(SIGCHLD, sig_chld);
-
+        
+        // fork a child process to start the game
         pid_t pid = fork();
         if(pid == 0){
 
             bzero(&sendline, sizeof(sendline));
-            sprintf(sendline, "there's %d players in total.\n", client_number);
-            for (int j = 0; j < client_number; j++){
-
-                sprintf(sendline, "%s %d. %s\n", sendline, j, client_name[j]);
+            sprintf(sendline, "總共有 %d 位玩家.\n", client_number);
+            for (int i = 0; i < client_number; i++){
+                sprintf(sendline, "%s %d. %s\n", sendline, i, client_name[i]);
             }
             for (int i = 0; i < client_number; i++){
-
                 write(client_fd[i], sendline, strlen(sendline));
             }
 
-            game();
-
             close(listen_fd);
+
+            // start the game
+            game(client_name, client_fd, client_number);
 
             exit(0);
         }
