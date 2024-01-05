@@ -1,12 +1,10 @@
-// #include <iostream>
-// #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-// #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include "../include/game.hpp"
 #include <sys/socket.h>
+#include <iostream>
 
 #define PORT 12345
 #define BUFFER_SIZE 1024
@@ -25,7 +23,11 @@ void game(char client_name[][32], int client_fd[], int client_number) {
     // cerr << "Game server started..." << endl;
     Game game;
     for (int i = 0; i < client_number; ++i) {
-        game.addPlayer(std::string(client_name[i]), client_fd[i]);
+        std::cerr << client_name << ' '<< client_fd[i] << std::endl;
+        game.addPlayer(std::string(client_name[i]), i+1, client_fd[i]);
+    }
+    for (auto &player : game.players) {
+        player.showStatus();
     }
     game.run();
     game.showStatus();

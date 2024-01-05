@@ -1,10 +1,12 @@
 #include "../include/game.hpp"
 #include <algorithm>
+#include <unistd.h>
 #include <iostream>
 #include <random>
 #include <chrono> 
 #include "game.hpp"
 #define MAP_SIZE 18
+#define BUFFER_SIZE 1024
 
 Game::Game() {
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -64,32 +66,42 @@ Game::Game() {
 
 // TODO: implement this function
 void Game::SendMessageToClient(std::string message, int sockfd = 0) {
-     // std::cout << message << endl;
+     message += "\n";
+     if (sockfd == 0) {
+          std::cerr << "no sockfd: " + message << std::endl;
+          return;
+     }
+     char sendline[BUFFER_SIZE];
+     bzero(&sendline, sizeof(sendline));
+     sprintf(sendline, "%s", message.c_str());
+     write(sockfd, sendline, strlen(sendline));
 }
 
 // TODO: remove brackets of for loop
 void Game::SendMessageToAllClients(std::string message) {
-     // for (auto &player : this->players) {
-          SendMessageToClient(message);
-     // }
+     for (auto &player : this->players) {
+          std::cerr << "send message: " + message + " to " + player.getName() << std::endl;
+          SendMessageToClient(message, player.getSockfd());
+     }
 }
 
 // TODO: implement this function
 std::string Game::ReadMessageFromClient(int sockfd = 0) {
-     std::string message;
-     std::cin >> message;
+     char recvline[BUFFER_SIZE];
+     bzero(&recvline, sizeof(recvline));
+     read(sockfd, recvline, sizeof(recvline));
+     std::string message(recvline);
+     std::cerr << "read message: " + message << std::endl;
      return message;
 }
 
 void Game::victory(Player& player) {
-     for (auto &player : this->players) {
-          SendMessageToClient(player.getName() + "贏得了遊戲！");
-     }
+     SendMessageToAllClients(player.getName() + "贏得了遊戲！");
      exit(0);
 }
 
-void Game::addPlayer(std::string name, int id) {
-     players.push_back(Player(name, id));
+void Game::addPlayer(std::string name, int id, int sockfd) {
+     this->players.push_back(Player(name, id, sockfd));
 }
 
 void Game::playerGetChance(Player& player) {
@@ -101,8 +113,8 @@ void Game::playerGetChance(Player& player) {
     chance.pop_back();
     player.addSkill(chanceCard);
 
-    SendMessageToClient("你得到了機會: " + chanceCard.getName());
-    SendMessageToClient(chanceCard.getStatement());
+    SendMessageToAllClients("\\\\\\\\\\" + player.getName() + "得到了機會: " + chanceCard.getName() + "/////");
+    SendMessageToAllClients(chanceCard.getStatement());
 }
 
 void Game::playerGetDensity(Player& player) {
@@ -131,16 +143,16 @@ void Game::playerGetDensity(Player& player) {
 void Game::handlePartyEvent(Player& player, int partyId){
      int playerParty = player.getParty();
      std::string partyName = (partyId == BLUE_PARTY ? "國民黨" : "民進黨");
-     SendMessageToClient("你所在的格子為政黨格： " + partyName);
+     SendMessageToClient("你所在的格子為政黨格： " + partyName, player.getSockfd());
      if (player.getMoney() < 500) {
-          SendMessageToClient("你的錢不夠支付政治獻金，無法提升政黨階級。");
+          SendMessageToClient("你的錢不夠支付政治獻金，無法提升政黨階級。", player.getSockfd());
           return;
      } 
 
      if (partyId == playerParty) {
-          SendMessageToClient( "支付 500 政治獻金，可以提升政黨階級。");
-          SendMessageToClient( "輸入 Y 支付，輸入 N 放棄。");
-          std::string choice = ReadMessageFromClient();
+          SendMessageToClient( "支付 500 政治獻金，可以提升政黨階級。", player.getSockfd());
+          SendMessageToClient( "輸入 Y 支付，輸入 N 放棄。", player.getSockfd());
+          std::string choice = ReadMessageFromClient(player.getSockfd());
           // TODO: Maybe we can use while loop to check the input is "Y" neither "N".
           
           // convert choice to upper case.
@@ -148,51 +160,51 @@ void Game::handlePartyEvent(Player& player, int partyId){
           if (choice == "Y") {
                player.addMoney(-500);
                player.setPartyLevel(player.getPartyLevel() + 1);
-               SendMessageToClient( "你提升了政黨階級，目前的階級為：" + std::to_string(player.getPartyLevel()));
+               SendMessageToClient( "你提升了政黨階級，目前的階級為：" + std::to_string(player.getPartyLevel()), player.getSockfd());
           } else {
-               SendMessageToClient( "你放棄了提升政黨階級。");
+               SendMessageToClient( "你放棄了提升政黨階級。", player.getSockfd());
           }
      } else {
           if (playerParty == 0) {
-               SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName);
+               SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName, player.getSockfd());
           } else {
-               SendMessageToClient( "你現在已經有政黨了，但你仍然可以支付政治獻金轉換政黨。");
-               SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName);
+               SendMessageToClient( "你現在已經有政黨了，但你仍然可以支付政治獻金轉換政黨。", player.getSockfd());
+               SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName, player.getSockfd());
           }
           SendMessageToClient( "輸入 Y 支付，輸入 N 放棄。");
-          char choice; std::cin >> choice;
-          if (choice == 'Y' || choice == 'y') {
+          std::string choice = ReadMessageFromClient(player.getSockfd());
+          if (choice[0] == 'Y' || choice[0] == 'y') {
                player.addMoney(-500);
                player.setParty(partyId);
                player.setPartyLevel(1);
-               SendMessageToClient( "你加入了政黨，目前的階級為：" + std::to_string(player.getPartyLevel()));
+               SendMessageToClient( "你加入了政黨，目前的階級為：" + std::to_string(player.getPartyLevel()), player.getSockfd());
           } else {
-               SendMessageToClient( "你放棄了加入政黨。");
+               SendMessageToClient( "你放棄了加入政黨。", player.getSockfd());
           }
      }
 }
 
 void Game::handleRealEstateEvent(Player& player, Grid& grid) {
+     auto playerSockfd = player.getSockfd();
      int ownerId = grid.getOwner();
      int tex = grid.getPayTex();
      int price = grid.getPrice();
      int level = grid.getLevel();
      int playerId = player.getId();
      std::string playerName = player.getName();
-     int playerSockfd = player.getSockfd();
 
      if (ownerId == 0) { // no owner
-          SendMessageToClient("你可以購買這塊土地，花費" + std::to_string(price) + "元。");
-          SendMessageToClient("輸入 Y 購買，輸入 N 放棄。");
-          std::string choice = ReadMessageFromClient();
-          if (choice == "Y" || choice == "y") {
+          SendMessageToClient("你可以購買這塊土地，花費" + std::to_string(price) + "元。", playerSockfd);
+          SendMessageToClient("輸入 Y 購買，輸入 N 放棄。", playerSockfd);
+          std::string choice = ReadMessageFromClient(playerSockfd);
+          if (choice[0] == 'Y' || choice[0] == 'y') {
                if (player.getMoney() < price) {
-                    SendMessageToClient("你的錢不夠支付購買費用。");
+                    SendMessageToClient("你的錢不夠支付購買費用。", playerSockfd);
                } else {
                     player.addMoney(-price);
                     grid.setOwner(playerId);
                     grid.setLevel(1);
-                    SendMessageToClient("你購買了這塊土地。");
+                    SendMessageToClient("你購買了這塊土地。", playerSockfd);
                }
           }
      } else {
@@ -201,7 +213,7 @@ void Game::handleRealEstateEvent(Player& player, Grid& grid) {
           if (ownerId == playerId) { // own by player
                SendMessageToClient("你已經擁有這塊土地了，花費" + std::to_string(tex) + "元升級。", playerSockfd);
                if (player.getMoney() < tex) {
-                    SendMessageToClient("你的錢不夠支付升級費用。");
+                    SendMessageToClient("你的錢不夠支付升級費用。", playerSockfd);
                } else {
                     SendMessageToClient("輸入 Y 升級，輸入 N 放棄。", playerSockfd);
                     std::string choice = ReadMessageFromClient(playerSockfd);
@@ -209,7 +221,7 @@ void Game::handleRealEstateEvent(Player& player, Grid& grid) {
                          player.addMoney(-tex);
                          int currentLevel = grid.getLevel();
                          grid.setLevel(currentLevel + 1);
-                         SendMessageToClient("你升級了這塊土地，目前的等級為：" + std::to_string(level));
+                         SendMessageToClient("你升級了這塊土地，目前的等級為：" + std::to_string(level), playerSockfd);
                     }
                }
           } else { // own by other player
@@ -222,6 +234,7 @@ void Game::handleRealEstateEvent(Player& player, Grid& grid) {
 }
 
 void Game::playerTurn(Player& player) {
+     int playerSockfd = player.getSockfd();
      const std::string playerName = player.getName();
      SendMessageToAllClients(playerName + "'s turn.");
      
@@ -233,8 +246,8 @@ void Game::playerTurn(Player& player) {
          return;
      }
 
-     SendMessageToClient("輸入一個字串作為骰子的隨機種子:");
-     std::string dice_seed = ReadMessageFromClient();
+     SendMessageToClient("輸入一個字串作為骰子的隨機種子:", playerSockfd);
+     std::string dice_seed = ReadMessageFromClient(playerSockfd);
      int sum = accumulate(dice_seed.begin(), dice_seed.end(), 0);
      srand(sum);
 
@@ -293,7 +306,7 @@ void Game::run() {
           std::cerr << "No player." << std::endl;
           return;
      }
-     SendMessageToAllClients("Starting the game...");
+     SendMessageToAllClients("------遊戲開始------");
      for (int Round=1; ; Round++) {
           SendMessageToAllClients("Round " + std::to_string(Round));
           for (auto &player : this->players) {

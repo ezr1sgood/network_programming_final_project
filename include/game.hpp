@@ -6,11 +6,11 @@
 
 class Game {
 private:
-    std::vector< Player > players;
     std::vector< Card > chance;
     std::vector< Card > density;
     bool status; // 1: game is running, 0: game is over
 public:
+    std::vector< Player > players;
     std::vector< Grid > map;
     Game();
     ~Game(){};
@@ -20,7 +20,7 @@ public:
 
     void run();
     void victory(Player& player);
-    void addPlayer(std::string name, int id);
+    void addPlayer(std::string name, int id, int sockfd);
     void playerGetChance(Player& player);
     void playerGetDensity(Player& player);
     void playerTurn(Player& player);

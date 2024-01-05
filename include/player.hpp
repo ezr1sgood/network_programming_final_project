@@ -12,13 +12,13 @@ private:
     int jail_duration;
     int user_id;
     int sockfd;
-    bool active; // active or not
+    bool active; // active or not                                                                            
     std::vector<Card> skills{};
     
 public:
     // Constructors
     Player();
-    Player(std::string name, int id);
+    Player(std::string name, int id, int sockfd);
     Player(const Player&);
 
     // Operations

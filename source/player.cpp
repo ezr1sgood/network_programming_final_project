@@ -6,7 +6,7 @@
 // Constuctors
 Player::Player() {}
 
-Player::Player(std::string name, int id) {
+Player::Player(std::string name, int id, int sockfd) {
     this->name = name;
     this->helth = 100;
     this->money = 1000;
@@ -16,6 +16,8 @@ Player::Player(std::string name, int id) {
     this->jail_duration = 0;
     this->active = true;
     this->user_id = id;
+    this->sockfd = sockfd;
+    std::cerr << this->sockfd << std::endl;
 }
 
 // Copy constructor
@@ -23,8 +25,14 @@ Player::Player(const Player& player) {
     this->name = player.name;
     this->helth = player.helth;
     this->money = player.money;
-    this->skills = player.skills;
+    this->location = player.location;
+    this->party = player.party;
+    this->party_level = player.party_level;
+    this->jail_duration = player.jail_duration;
     this->user_id = player.user_id;
+    this->sockfd = player.sockfd;
+    this->active = player.active;
+    this->skills = player.skills;
 }
 
 // Operations
