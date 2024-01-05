@@ -30,7 +30,6 @@ public:
     void handleRealEstateEvent(Player&, Grid&);
     
     void showStatus() {
-        // cout << "Players: " << endl;
         for (auto &player : players) {
             player.showStatus();
         }

@@ -11,13 +11,13 @@ Game::Game() {
     this->status = true;
     // initialize the chance cards
     chance = std::vector<Card>({
-        Card("外役監啦，哈哈!", 
+        Card("c-1", "外役監啦，哈哈!", 
              "你必須已經加入一個政黨才能使用此卡片\n效果：如果當前所在格子為監獄，則可立即離開監獄，並且獲得獄中人脈，政黨階級+1。"),
-        Card("政治鬥爭",
+        Card("c-2", "政治鬥爭",
              "效果：指定一個已經有政黨的玩家，使其政黨階級 -1。"),
-        Card("神風特攻隊",
+        Card("c-3", "神風特攻隊",
              "效果：攻擊其中一個格子，建築物夷平玩家生命值減少 50。"),
-        Card("機車三寶",
+        Card("c-4", "機車三寶",
              "效果：指定一位玩家，令該玩家生命值減少 20"),
     });
 
@@ -25,15 +25,15 @@ Game::Game() {
 
     // initialize the density cards
     density = std::vector<Card>({
-        Card("快步過馬路",
+        Card("d-1", "快步過馬路",
              "因為你在台灣快步走過馬路，導致視野死角，被機車撞到。\n效果：生命值減少 20。"),
-        Card("慢步過馬路",
+        Card("d-2", "慢步過馬路",
              "因為你在台灣慢步走過馬路，引起大眾觀感不佳。\n效果：政黨階級 -1。"),
-        Card("背鍋俠",
-             "你是教育部的臉書粉專小編，教育部亂拍影片遭到公眾撻伐，你被迫『具名』背鍋，身心受創。\n效果：生命值減少 20。\nhttps://fongnews.net/political/83116/"),
-        Card("大撒幣",
+        Card("d-3", "背鍋俠",
+             "你是教育部的臉書粉專小編，教育部亂拍影片遭到公眾撻伐，你被迫『具名』背鍋，身心受創。\n效果：生命值減少 50。\nhttps://fongnews.net/political/83116/"),
+        Card("d-4", "大撒幣",
              "總統大選即將到來，政府決定補助私立大學學費 3.5 萬元，但花的不是他的錢，是你這個納稅人的錢。\n效果：你的金錢減少 500。"),
-        Card("中樂透",
+        Card("d-5", "中樂透",
              "在小七無聊買個可爾必思沒事就中了 1000 萬元發票。\n效果：你的金錢增加 5000。")
     });
 
@@ -106,7 +106,26 @@ void Game::playerGetChance(Player& player) {
 }
 
 void Game::playerGetDensity(Player& player) {
-     ;
+     auto playerName = player.getName();
+     auto densityCard = density.back();
+     density.pop_back();
+     auto densityId = densityCard.getId();
+     auto densityName = densityCard.getName();
+     auto densityStatement = densityCard.getStatement();
+     SendMessageToAllClients("!!!!!!" + playerName + " 得到了命運: " + densityName + "!!!!!!");
+     SendMessageToAllClients(densityStatement);
+
+     if (densityId == "d-1") {
+          player.addHelth(-20);
+     } else if (densityId == "d-2") {
+          player.setPartyLevel(player.getPartyLevel() - 1);
+     } else if (densityId == "d-3") {
+          player.addHelth(-50);
+     } else if (densityId == "d-4") {
+          player.addMoney(-500);
+     } else if (densityId == "d-5") {
+          player.addMoney(5000);
+     }
 }
 
 void Game::handlePartyEvent(Player& player, int partyId){
