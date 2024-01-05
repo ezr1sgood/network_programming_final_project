@@ -2,7 +2,6 @@
 #define GRID_HPP_INCLUDED
 #include <vector>
 #include <string>
-using namespace std;
 
 enum GRID_TYPE{
     START_GRID  = 0,
@@ -16,14 +15,14 @@ enum GRID_TYPE{
 
 class Grid {
 private:
-    string name;
+    std::string name;
     int type;
     int price, level, tex; // for real estate
     int owner; // owner's id
 public:
     Grid(){};
-    Grid(string name, int type, int price, int tex); // initialize the real estate grid
-    Grid(string name, int type); // initialize the other grids
+    Grid(std::string name, int type, int price, int tex); // initialize the real estate grid
+    Grid(std::string name, int type); // initialize the other grids
     ~Grid(){};
     int getPayTex();
     int getTex();
@@ -34,6 +33,6 @@ public:
 
     void setOwner(int);
     void setLevel(int);
-    string getName();
+    std::string getName();
 };
 #endif // GRID_HPP_INCLUDED

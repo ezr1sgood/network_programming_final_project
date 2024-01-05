@@ -6,7 +6,7 @@
 // Constuctors
 Player::Player() {}
 
-Player::Player(string name, int id) {
+Player::Player(std::string name, int id) {
     this->name = name;
     this->helth = 100;
     this->money = 1000;
@@ -95,18 +95,18 @@ bool Player::getActive() {
     return active;
 }
 
-string Player::getName() {
+std::string Player::getName() {
     return name;
 }
 
 
 void Player::showStatus() {
-    cout << "Player\t\t" << this->getName() << endl;
-    cout << "Helth\t\t" << this->getHelth() << endl;
-    cout << "Money\t\t" << this->getMoney() << endl;
-    cout << "Location\t" << this->getLocation() << endl;
-    cout << "Party\t\t" << this->getParty() << endl;
-    cout << "Party level\t" << this->getPartyLevel() << endl;
-    cout << "Jail duration\t" << this->getJailDuration() << endl;
-    cout << "--------------------------------\n";
+    std::cout << "Player\t\t" << this->getName() << std::endl;
+    std::cout << "Helth\t\t" << this->getHelth() << std::endl;
+    std::cout << "Money\t\t" << this->getMoney() << std::endl;
+    std::cout << "Location\t" << this->getLocation() << std::endl;
+    std::cout << "Party\t\t" << this->getParty() << std::endl;
+    std::cout << "Party level\t" << this->getPartyLevel() << std::endl;
+    std::cout << "Jail duration\t" << this->getJailDuration() << std::endl;
+    std::cout << "--------------------------------\n";
 }

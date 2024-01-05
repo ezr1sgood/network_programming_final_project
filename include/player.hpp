@@ -3,23 +3,22 @@
 #include <string>
 #include <vector>
 #include "card.hpp"
-using namespace std;
 
 class Player {
 private:
-    string name;
+    std::string name;
     int helth, money, location;
     int party, party_level;
     int jail_duration;
     int user_id;
     int sockfd;
     bool active; // active or not
-    vector<Card> skills{};
+    std::vector<Card> skills{};
     
 public:
     // Constructors
     Player();
-    Player(string name, int id);
+    Player(std::string name, int id);
     Player(const Player&);
 
     // Operations
@@ -41,7 +40,7 @@ public:
     int getId();
     int getSockfd();
     bool getActive();
-    string getName();
+    std::string getName();
 
     // show status
     void showStatus();
