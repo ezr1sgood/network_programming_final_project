@@ -5,3 +5,7 @@
 **/obj
 **/*.server
 **/*.client
+**/server
+**/client
+server
+client
