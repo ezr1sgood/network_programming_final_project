@@ -34,5 +34,9 @@ public:
             player.showStatus();
         }
     }
+
+    void sendStatus();
+
+    void sendMap(Player &player);
 };
 #endif // GAME_HPP_INCLUDED

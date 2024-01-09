@@ -10,6 +10,7 @@ IDIR		:= include
 CXX			?= g++
 INCLUDES	:= -I $(IDIR)
 C_FLAGS		:= -Wall -Wextra -Wshadow -std=c++17
+L_FLAGS		:= -lncursesw
 RC_FLAGS	:= -O2
 DC_FLAGS	:= -g -DDEBUG -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -D_GLIBCXX_DEBUG_PEDANTIC_ASSERT
 
@@ -42,7 +43,7 @@ server: $(EXE)
 
 $(EXE): dirs $(OBJS)
 	$(CXX) $(OBJS) -o $@
-	$(CXX) $(ODIR)/client.o -o $(BDIR)/client
+	$(CXX) $(ODIR)/client.o -o $(BDIR)/client $(L_FLAGS)
 	
 -include $(DEPS)
 

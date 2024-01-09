@@ -1,68 +1,278 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#include <curses.h>
+#include <locale.h>
 #include <unistd.h>
+#include <vector>
 #include <arpa/inet.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <fcntl.h>
+#include <iomanip>
 
+#define ADDR "127.0.0.1"
 #define PORT 12345
 #define BUFFER_SIZE 1024
 
+#define window_first_row 1
+#define window_last_row 20
+#define window_first_col 1
+#define window_last_col 75
+
+#define status_first_row 1
+#define status_last_row 31
+#define status_first_col 81
+#define status_last_col 120
+
+#define recv_first_row 21
+#define recv_last_row 30
+#define recv_first_col 1
+#define recv_last_col 80
+
+#define player_first_row 30
+#define player_last_row 30
+#define player_first_col 1
+#define player_last_col 80
+
 char name[BUFFER_SIZE];
+int player_num = 0;
+
+void clear_screen(){
+
+    printf("\x1B[2J\x1B[H");
+}
+
+void set_cursor_position(int x, int y) {
+
+    printf("\x1B[%d;%dH", x, y);
+}
+
+void clear_recv_window(){
+
+    for(int i = recv_first_row; i <= recv_last_row; i++){
+
+        for(int j = recv_first_col; j <= recv_last_col; j++){
+
+            set_cursor_position(i, j);
+            printf(" ");
+        }
+    }
+    set_cursor_position(recv_first_row, recv_first_col);
+}
+
+void draw_grid(){
+
+    int up = 7, down = 13, left = 3, right = 23;
+
+    for(int k = 0; k < 3; k++){
+
+        if(k){
+
+            left += 24;
+            right += 24;
+        }
+        for(int i = up; i <= down; i++){
+
+            for(int j = left; j <= right; j++){
+
+                if(i == up || i == down || j == left || j == right){
+
+                    set_cursor_position(i, j);
+                    printf("@");
+                }
+            }
+        }
+        set_cursor_position(10, right + 1);
+        printf("<--");
+    }
+
+    set_cursor_position(6, 31);
+    printf("now you are at");
+}
+
+void draw_game_window(){
+
+    for(int i = window_first_row; i <= window_last_row; i++){
+
+        for(int j = window_first_col; j <= window_last_col; j++){
+
+            set_cursor_position(i, j);
+            if(i == window_first_row || i == window_last_row){
+
+                printf("=");
+            }
+            else if(j == window_first_col || j == window_last_col){
+
+                printf("|");
+            }
+            else{
+
+                printf(" ");
+            }
+        }
+    }
+
+    draw_grid();
+}
+
+int print_buffer(std::vector<char> buffer, int status, int cnt_recv, int cnt_status, int cnt_map){
+
+    if(std::equal(buffer.begin(), buffer.end(), "status of player")){
+
+        return 1;
+    }
+    else if(std::equal(buffer.begin(), buffer.end(), "end of status")){
+
+        return 0;
+    }
+    else if(std::equal(buffer.begin(), buffer.end(), "map of player")){
+
+        return 2;
+    }
+    else if(std::equal(buffer.begin(), buffer.end(), "end of map")){
+
+        return 0;
+    }
+    else if(std::equal(buffer.begin(), buffer.begin() + 7, "there's")){
+        
+        player_num = buffer[8] - 48;
+    }
+    else if(std::equal(buffer.begin(), buffer.begin() + 5, "Round")){
+
+        clear_screen();
+        draw_game_window();
+    }
+
+    if(status == 0){
+
+        set_cursor_position(recv_first_row + cnt_recv, recv_first_col);
+    }
+    else if(status == 1){
+
+        set_cursor_position(status_first_row + cnt_status, status_first_col);
+    }
+    else if(status == 2){
+
+        int tmp = 19 - buffer.size();
+        set_cursor_position(8, 4 + 24 * (cnt_map - 1) + (abs(tmp) / 2));
+        // draw_game_window();
+    }
+
+    for(auto &it: buffer){
+
+        printf("%c", it);
+    }
+    printf("\n", cnt_recv);
+
+    return status;
+}
 
 void game(FILE *fp, int sock_fd){
 
-    int       maxfdp1, stdineof, peer_exit, n;
+    int       maxfdp1, stdineof, peer_exit, n, status = 0, cnt_recv = 0, cnt_status = 0, cnt_map = 0;
     fd_set    rset;
     char recvline[BUFFER_SIZE], sendline[BUFFER_SIZE];
+
+    std::vector<char> buffer;
+    buffer.reserve(BUFFER_SIZE);
+
+    clear_screen();
+    draw_game_window();
+    // draw_status_window();
+    // draw_recv_window();
 
     bzero(&sendline, sizeof(sendline));
     sprintf(sendline, "%s", name);
     write(sock_fd, sendline, strlen(sendline));
 
-    bzero(&recvline, sizeof(recvline));
-    read(sock_fd, recvline, sizeof(recvline));
-    printf("%s", recvline);
-	
     stdineof = 0;
-	peer_exit = 0;
+    peer_exit = 0;
 
-    for ( ; ; ) {	
-		FD_ZERO(&rset);
-		maxfdp1 = 0;
-        if (stdineof == 0) {
+    bzero(&sendline, sizeof(sendline));
+    while(true){
+
+        FD_ZERO(&rset);
+        maxfdp1 = 0;
+
+        if(peer_exit == 0){
+
+            FD_SET(sock_fd, &rset);
+            maxfdp1 = sock_fd + 1;
+        }
+        if(stdineof == 0){
+
             FD_SET(fileno(fp), &rset);
-			maxfdp1 = fileno(fp);
-		};	
-		if (peer_exit == 0) {
-			FD_SET(sock_fd, &rset);
-			if (sock_fd > maxfdp1)
-				maxfdp1 = sock_fd;
-		};	
-        maxfdp1++;
+            if(fileno(fp) + 1 > maxfdp1){
+
+                maxfdp1 = fileno(fp) + 1;
+            }
+        }
+
         select(maxfdp1, &rset, NULL, NULL, NULL);
-		if (FD_ISSET(sock_fd, &rset)) {  /* socket is readable */
-			n = read(sock_fd, recvline, BUFFER_SIZE);
+
+        if(FD_ISSET(sock_fd, &rset)){
+            //recieve something from server
+            n = read(sock_fd, recvline, BUFFER_SIZE);
 			if (n == 0) {
  		   		if (stdineof == 1)
                     return;         /* normal termination */
 		   		else {
-					printf("(End of input from the peer!)");
+					
 					peer_exit = 1;
 					return;
 				};
             }
 			else if (n > 0) {
+
 				recvline[n] = '\0';
-				printf(recvline);
+                //split receive with \n
+                for(int i = 0; i < BUFFER_SIZE; i++){
+
+                    if(recvline[i] == '\n'){
+
+                        status = print_buffer(buffer, status, cnt_recv, cnt_status, cnt_map); // 0 -> recvline, 1 -> status, 2 -> game window
+                        buffer.clear();
+
+                        if(status == 0){
+
+                            cnt_recv++;
+                            cnt_status = 0;
+                            cnt_map = 0;
+                        }
+                        else if(status == 1){
+
+                            cnt_recv = 0;
+                            cnt_status++;
+                            cnt_map = 0;
+                        }
+                        else if(status == 2){
+
+                            cnt_recv = 0;
+                            cnt_status = 0; 
+                            cnt_map++;
+                        }
+                    }
+                    else if(recvline[i] == '\0'){
+
+                        break;
+                    }
+                    else{
+
+                        buffer.push_back(recvline[i]);
+                    }
+                }
+
+                set_cursor_position(recv_first_row, recv_first_col);
 			}
 			else { // n < 0
-			    printf("(server down)");
+			    
 				return;
 			};
         }
-		
-        if (FD_ISSET(fileno(fp), &rset)) {  /* input is readable */
-
+        if(FD_ISSET(fileno(fp), &rset)){
+            
             if (fgets(sendline, BUFFER_SIZE, fp) == NULL) {
 				if (peer_exit)
 					return;
@@ -75,10 +285,15 @@ void game(FILE *fp, int sock_fd){
 			else {
 				
 				write(sock_fd, sendline, strlen(sendline));
-			};
+                clear_recv_window();
+                cnt_recv = 0;
+                cnt_status = 0;
+                cnt_map = 0;
+			}
         }
     }
 }
+
 
 int main(int argc, char **argv) {
 
@@ -112,11 +327,11 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
+    set_cursor_position(recv_first_row, recv_first_col);
     printf("Connected to server on %s:%d\n", argv[1], PORT);
 
     game(stdin, sock_fd);
 
-    // Close the client socket
     close(sock_fd);
 
     return 0;

@@ -4,7 +4,8 @@
 #include <iostream>
 #include <random>
 #include <chrono> 
-#include "game.hpp"
+#include <string.h>
+#include "../include/game.hpp"
 #define MAP_SIZE 18
 #define BUFFER_SIZE 1024
 
@@ -80,7 +81,7 @@ void Game::SendMessageToClient(std::string message, int sockfd = 0) {
 // TODO: remove brackets of for loop
 void Game::SendMessageToAllClients(std::string message) {
      for (auto &player : this->players) {
-          std::cerr << "send message: " + message + " to " + player.getName() << std::endl;
+          std::cerr << "send message to " + player.getName() + ":" + message << std::endl;
           SendMessageToClient(message, player.getSockfd());
      }
 }
@@ -233,6 +234,37 @@ void Game::handleRealEstateEvent(Player& player, Grid& grid) {
      }
 }
 
+void Game::sendStatus(){
+
+     SendMessageToAllClients("status of player");
+     for(auto &player: this -> players){
+
+          SendMessageToAllClients("| Player\t\t" + player.getName() + "\t|");
+          SendMessageToAllClients("| Health\t\t" + std::to_string(player.getHelth()) + "\t|");
+          SendMessageToAllClients("| Money\t\t\t" + std::to_string(player.getMoney()) + "\t|");
+          SendMessageToAllClients("| Location\t\t" + std::to_string(player.getLocation()) + "\t|");
+          SendMessageToAllClients("| Party\t\t\t" + std::to_string(player.getParty()) + "\t|");
+          SendMessageToAllClients("| Party Level\t\t" + std::to_string(player.getPartyLevel()) + "\t|");
+          SendMessageToAllClients("|-------------------------------|");
+     }
+     SendMessageToAllClients("end of status");
+}
+void Game::sendMap(Player &player){
+
+     int playerNowPosition = player.getLocation();
+     std::string gridName = map[playerNowPosition].getName();
+     std::string prevGridName = map[(playerNowPosition - 1 + MAP_SIZE) % MAP_SIZE].getName();
+     std::string nextGridName = map[(playerNowPosition + 1) % MAP_SIZE].getName();
+
+     SendMessageToClient("map of player", player.getSockfd());
+
+     SendMessageToClient(prevGridName, player.getSockfd());
+     SendMessageToClient(gridName, player.getSockfd());
+     SendMessageToClient(nextGridName, player.getSockfd());
+
+     SendMessageToClient("end of map", player.getSockfd());
+}
+
 void Game::playerTurn(Player& player) {
      int playerSockfd = player.getSockfd();
      const std::string playerName = player.getName();
@@ -309,11 +341,21 @@ void Game::run() {
      SendMessageToAllClients("------遊戲開始------");
      for (int Round=1; ; Round++) {
           SendMessageToAllClients("Round " + std::to_string(Round));
+          sendStatus();
+          for(auto &player: this->players){
+
+               sendMap(player);
+          }
           for (auto &player : this->players) {
                playerTurn(player);
                endTurn(player);
           }
-          if (Round == 20) {
+          if (Round == 2) {
+               sendStatus();
+               for(auto &player: this->players){
+
+                    sendMap(player);
+               }
                SendMessageToAllClients("Game end.");
                break;
           }

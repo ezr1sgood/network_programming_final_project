@@ -2,6 +2,7 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <string.h>
 #include "../include/game.hpp"
 #include <sys/socket.h>
 #include <iostream>
@@ -80,7 +81,8 @@ int main() {
         sprintf(client_name[0], "%s", recvline);
 
         bzero(&sendline, sizeof(sendline));
-        sprintf(sendline, "你是房主, 請輸入 2~4 的數字來決定有幾位玩家。\n");
+        // sprintf(sendline, "你是房主, 請輸入 2~4 的數字來決定有幾位玩家。\n");
+        sprintf(sendline, "you are the room owner, choose how many player to enter the game(2~4).\n");
         write(client_fd[0], sendline, strlen(sendline));
 
         bzero(&recvline, sizeof(recvline));
@@ -94,10 +96,12 @@ int main() {
             else{
 
                 bzero(&sendline, sizeof(sendline));
-                sprintf(sendline, "請輸入正確的數字(2~4).\n");
+                // sprintf(sendline, "請輸入正確的數字(2~4).\n");
+                sprintf(sendline, "please choose correct number(2~4)%d.\n",client_number);
                 write(client_fd[0], sendline, strlen(sendline));
             }
         }
+
         // Waiting for other users
         for (int i = 1; i < client_number; i++){
             client_len[i] = sizeof(client_address[i]);
@@ -119,7 +123,8 @@ int main() {
         if(pid == 0){
 
             bzero(&sendline, sizeof(sendline));
-            sprintf(sendline, "總共有 %d 位玩家.\n", client_number);
+            // sprintf(sendline, "總共有 %d 位玩家.\n", client_number);
+            sprintf(sendline, "there's %d players in total.\n", client_number);
             for (int i = 0; i < client_number; i++){
                 sprintf(sendline, "%s %d. %s\n", sendline, i, client_name[i]);
             }
