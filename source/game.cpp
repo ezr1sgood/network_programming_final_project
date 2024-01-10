@@ -284,12 +284,13 @@ void Game::handlePlayerUseSkill(Player &player) {
           "你有以下技能，請輸入 " + std::to_string(0) + "~" + std::to_string(skills.size()-1) + "以選擇欲使用的技能", 
           playerSockfd
      );
+     int cnt = 0;
      for (int i = 0; i < skills.size(); i++) {
           // if card is c-1, player have to in the jail when use this card.
           if (skills[i].getId() == "c-1" && player.getJailDuration() == 0) continue;
           SendMessageToClient(std::to_string(i) + ". " + skills[i].getName(), playerSockfd);
+          ++cnt;
      }
-
      std::string inp = ReadMessageFromClient(playerSockfd);
      // No one can have more than 9 skills 
      int index = -1;
@@ -309,9 +310,9 @@ void Game::handlePlayerUseSkill(Player &player) {
                SendMessageToAllClients(playerName + "離開了監獄，並且獲得獄中人脈，政黨階級+1。");
           } else if (skillId == "c-2") {
                SendMessageToClient("請輸入你想攻擊的玩家編號：", playerSockfd);
-               int targetId = ReadMessageFromClient(playerSockfd)[0] - '0'; // modify if player number > 10
+               int targetId = ReadMessageFromClient(playerSockfd)[0] - '0'; // modify if player number >= 10
                if (targetId >= 0 && targetId < players.size()) {
-                    Player &target = players[targetId-1];
+                    Player &target = players[targetId];
                     target.setPartyLevel(std::max(0,target.getPartyLevel() - 1)); // party level cannot be negative
                     SendMessageToAllClients(playerName + "攻擊了" + target.getName() + "，使其政黨階級 -1。");
                }
@@ -334,16 +335,17 @@ void Game::handlePlayerUseSkill(Player &player) {
                }
           } else if (skillId == "c-4") {
                SendMessageToClient("請輸入你想攻擊的玩家編號：", playerSockfd);
-               std::string inp = ReadMessageFromClient(playerSockfd);
-               if (is_number(inp) && stoi(inp) >= 0 && stoi(inp) < this->players.size()) {  
-                    int targetId = stoi(inp); 
-                    Player &target = players[targetId-1];
+               int targetId = ReadMessageFromClient(playerSockfd)[0] - '0'; // modify if player number >= 10
+               if (targetId >= 0 && targetId < this->players.size()) {  
+                    Player &target = players[targetId];
+                    std::cerr << "targetId: " << targetId << std::endl;
+                    std::cerr << "targetName: " << target.getName() << std::endl;
                     target.addHelth(-20);
                     SendMessageToAllClients(playerName + "攻擊了" + target.getName() + "，使其生命值減少 20。");
                }
           }
      }
-}
+}    
 
 void Game::playerTurn(Player& player) {
      int playerSockfd = player.getSockfd();
