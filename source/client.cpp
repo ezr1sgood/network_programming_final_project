@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <curses.h>
 #include <locale.h>
 #include <unistd.h>
 #include <vector>
+#include <deque>
 #include <arpa/inet.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -88,8 +88,8 @@ void draw_grid(){
         printf("<--");
     }
 
-    set_cursor_position(6, 31);
-    printf("now you are at");
+    set_cursor_position(6, 33);
+    printf("目前位置");
 }
 
 void draw_game_window(){
@@ -117,7 +117,7 @@ void draw_game_window(){
     draw_grid();
 }
 
-int print_buffer(std::vector<char> buffer, int status, int cnt_recv, int cnt_status, int cnt_map){
+int print_buffer(std::vector<char> buffer, std::deque<std::vector<char> > message_queue, int status, int cnt_recv, int cnt_status, int cnt_map){
 
     if(std::equal(buffer.begin(), buffer.end(), "status of player")){
 
@@ -125,7 +125,7 @@ int print_buffer(std::vector<char> buffer, int status, int cnt_recv, int cnt_sta
     }
     else if(std::equal(buffer.begin(), buffer.end(), "end of status")){
 
-        return 0;
+        return 3;
     }
     else if(std::equal(buffer.begin(), buffer.end(), "map of player")){
 
@@ -133,7 +133,7 @@ int print_buffer(std::vector<char> buffer, int status, int cnt_recv, int cnt_sta
     }
     else if(std::equal(buffer.begin(), buffer.end(), "end of map")){
 
-        return 0;
+        return 3;
     }
     else if(std::equal(buffer.begin(), buffer.begin() + 7, "there's")){
         
@@ -147,7 +147,18 @@ int print_buffer(std::vector<char> buffer, int status, int cnt_recv, int cnt_sta
 
     if(status == 0){
 
-        set_cursor_position(recv_first_row + cnt_recv, recv_first_col);
+        clear_recv_window();
+        set_cursor_position(recv_first_row, recv_first_col);
+        while(message_queue.size() >= recv_last_row - recv_first_row - 2) message_queue.pop_front();
+        for(auto &message_it: message_queue){
+
+            std::vector<char> tmp = message_it;
+            for(auto &buffer_it: tmp){
+
+                printf("%c", buffer_it);
+            }
+            printf("\n");
+        }
     }
     else if(status == 1){
 
@@ -157,14 +168,23 @@ int print_buffer(std::vector<char> buffer, int status, int cnt_recv, int cnt_sta
 
         int tmp = 19 - buffer.size();
         set_cursor_position(8, 4 + 24 * (cnt_map - 1) + (abs(tmp) / 2));
-        // draw_game_window();
+    }
+    else if(status == 3){
+
+        // clear_recv_window();
+        set_cursor_position(recv_first_row, recv_first_col);
     }
 
     for(auto &it: buffer){
 
         printf("%c", it);
     }
-    printf("\n", cnt_recv);
+    printf("\n");
+
+    if(status == 3){
+
+        return 0;
+    }
 
     return status;
 }
@@ -175,8 +195,8 @@ void game(FILE *fp, int sock_fd){
     fd_set    rset;
     char recvline[BUFFER_SIZE], sendline[BUFFER_SIZE];
 
+    std::deque<std::vector<char> > message_queue;
     std::vector<char> buffer;
-    buffer.reserve(BUFFER_SIZE);
 
     clear_screen();
     draw_game_window();
@@ -232,10 +252,20 @@ void game(FILE *fp, int sock_fd){
 
                     if(recvline[i] == '\n'){
 
-                        status = print_buffer(buffer, status, cnt_recv, cnt_status, cnt_map); // 0 -> recvline, 1 -> status, 2 -> game window
+                        status = print_buffer(buffer, message_queue, status, cnt_recv, cnt_status, cnt_map); // 0 -> recvline, 1 -> status, 2 -> game window
+                    
+                        while(message_queue.size() >= recv_last_row - recv_first_row - 2){
+
+                            message_queue.pop_front();
+                        }
+                        if(status == 0){
+
+                            message_queue.push_back(buffer);
+                        }
+
                         buffer.clear();
 
-                        if(status == 0){
+                        if(status == 0 || status == 3){
 
                             cnt_recv++;
                             cnt_status = 0;
@@ -255,7 +285,7 @@ void game(FILE *fp, int sock_fd){
                         }
                     }
                     else if(recvline[i] == '\0'){
-
+                        bzero(&recvline, sizeof(recvline));
                         break;
                     }
                     else{

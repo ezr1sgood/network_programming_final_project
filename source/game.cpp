@@ -330,6 +330,8 @@ void Game::playerTurn(Player& player) {
                 std::cerr << "You are at the unknown grid." << std::endl;
                 break;
      }
+
+     // playerUseSkill(player);
 }
 
 void Game::endTurn(Player& player) {
