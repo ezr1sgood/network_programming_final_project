@@ -124,7 +124,7 @@ int main() {
 
             bzero(&sendline, sizeof(sendline));
             // sprintf(sendline, "總共有 %d 位玩家.\n", client_number);
-            sprintf(sendline, "there's %d players in total.\n", client_number);
+            sprintf(sendline, "總共有 %d 位玩家.\n", client_number);
             for (int i = 0; i < client_number; i++){
                 sprintf(sendline, "%s %d. %s\n", sendline, i, client_name[i]);
             }

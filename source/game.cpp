@@ -306,7 +306,9 @@ void Game::handlePlayerUseSkill(Player &player) {
 
           if (skillId == "c-1" && player.getJailDuration() > 0) {
                player.setJailDuration(0);
-               player.setPartyLevel(player.getPartyLevel() + 1);
+               if (player.getParty() != 0) { // party level up if player has party
+                    player.setPartyLevel(player.getPartyLevel() + 1);
+               }
                SendMessageToAllClients(playerName + "離開了監獄，並且獲得獄中人脈，政黨階級+1。");
           } else if (skillId == "c-2") {
                SendMessageToClient("請輸入你想攻擊的玩家編號：", playerSockfd);
@@ -350,7 +352,7 @@ void Game::handlePlayerUseSkill(Player &player) {
 void Game::playerTurn(Player& player) {
      int playerSockfd = player.getSockfd();
      const std::string playerName = player.getName();
-     SendMessageToAllClients(playerName + "'s turn.");
+     SendMessageToAllClients(playerName + "的回合");
      
      // check jail duration
      int playerJailDuration = player.getJailDuration();
@@ -441,7 +443,7 @@ void Game::run() {
      }
      SendMessageToAllClients("------遊戲開始------");
      for (int Round=1; ; Round++) {
-          SendMessageToAllClients("Round " + std::to_string(Round));
+          SendMessageToAllClients("第 " + std::to_string(Round) + " 回合");
           sendStatus();
           for(auto &player: this->players){
                if (player.getActive() == false) 
