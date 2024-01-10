@@ -1,7 +1,8 @@
 #include "../include/grid.hpp"
 
 // initialize the real estate grid
-Grid::Grid(std::string name, int type, int price, int tex) {
+Grid::Grid(std::string name, int id, int type, int price, int tex) {
+    this->id = id;
     this->name = name;
     this->type = type;
     this->price = price;
@@ -11,7 +12,8 @@ Grid::Grid(std::string name, int type, int price, int tex) {
 }
 
 // initialize the other grids
-Grid::Grid(std::string name, int type) {
+Grid::Grid(std::string name, int id, int type) {
+    this->id = id;
     this->name = name;
     this->type = type;
     this->price = 0;
@@ -46,6 +48,10 @@ std::string Grid::getName() {
 
 int Grid::getOwner() {
     return owner;
+}
+
+int Grid::getId() {
+    return id;
 }
 
 void Grid::setOwner(int _owner) {

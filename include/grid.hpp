@@ -18,11 +18,12 @@ private:
     std::string name;
     int type;
     int price, level, tex; // for real estate
+    int id;
     int owner; // owner's id
 public:
     Grid(){};
-    Grid(std::string name, int type, int price, int tex); // initialize the real estate grid
-    Grid(std::string name, int type); // initialize the other grids
+    Grid(std::string name, int id, int type, int price, int tex); // initialize the real estate grid
+    Grid(std::string name, int id, int type); // initialize the other grids
     ~Grid(){};
     int getPayTex();
     int getTex();
@@ -30,6 +31,7 @@ public:
     int getPrice();
     int getType();
     int getOwner();
+    int getId();
 
     void setOwner(int);
     void setLevel(int);
