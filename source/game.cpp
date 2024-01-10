@@ -135,7 +135,9 @@ void Game::playerGetDensity(Player& player) {
      if (densityId == "d-1") {
           player.addHelth(-20);
      } else if (densityId == "d-2") {
-          player.setPartyLevel(player.getPartyLevel() - 1);
+          if (player.getParty() != 0) {// party level down if player has party
+               player.setPartyLevel(player.getPartyLevel() - 1);
+          }
      } else if (densityId == "d-3") {
           player.addHelth(-50);
      } else if (densityId == "d-4") {
