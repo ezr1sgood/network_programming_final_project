@@ -35,6 +35,7 @@ public:
 
     void setOwner(int);
     void setLevel(int);
+    void reset();
     std::string getName();
 };
 #endif // GRID_HPP_INCLUDED

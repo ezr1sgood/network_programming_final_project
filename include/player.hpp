@@ -30,18 +30,20 @@ public:
     void setParty(const int);
     void setPartyLevel(const int);
     void setActive(const bool);
+    void removeSkill(int);
     
     // Get functions
-    int getHelth();
-    int getMoney();
-    int getLocation();
-    int getJailDuration();
-    int getParty();
-    int getPartyLevel();
-    int getId();
-    int getSockfd();
-    bool getActive();
-    std::string getName();
+    int getHelth() const;
+    int getMoney() const;
+    int getLocation() const;
+    int getJailDuration() const;
+    int getParty() const;
+    int getPartyLevel() const;
+    int getId() const;
+    int getSockfd() const;
+    bool getActive() const;
+    std::vector<Card> getSkills() const;
+    std::string getName() const;
 
     // show status
     void showStatus();

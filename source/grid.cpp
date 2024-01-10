@@ -61,3 +61,8 @@ void Grid::setOwner(int _owner) {
 void Grid::setLevel(int _level) {
     this->level = _level;
 }
+
+void Grid::reset() {
+    this->setLevel(0);
+    this->setOwner(0);
+}

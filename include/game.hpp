@@ -30,6 +30,7 @@ public:
 
     void handlePartyEvent(Player&, const int partyType);
     void handleRealEstateEvent(Player&, Grid&);
+    void handlePlayerUseSkill(Player &player);
     
     void showStatus() {
         for (auto &player : players) {

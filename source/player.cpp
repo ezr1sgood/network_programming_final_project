@@ -69,44 +69,52 @@ void Player::setActive(const bool _active) {
     this->active = _active;
 }
 
+void Player::removeSkill(int skill_id) {
+    this->skills.erase(this->skills.begin() + skill_id);
+}
+
+std::vector<Card> Player::getSkills() const {
+    return this->skills;
+}
+
 // Get functions
-int Player::getHelth() {
+int Player::getHelth() const {
     return helth;
 }
 
-int Player::getMoney() {
+int Player::getMoney() const {
     return money;
 }
 
-int Player::getLocation() {
+int Player::getLocation() const {
     return location;
 }
 
-int Player::getJailDuration() {
+int Player::getJailDuration() const {
     return jail_duration;
 }
 
-int Player::getParty() {
+int Player::getParty() const {
     return party;
 }
 
-int Player::getPartyLevel() {
+int Player::getPartyLevel() const {
     return party_level;
 }
 
-int Player::getId() {
+int Player::getId() const {
     return user_id;
 }
 
-int Player::getSockfd() {
+int Player::getSockfd() const {
     return sockfd;
 }
 
-bool Player::getActive() {
+bool Player::getActive() const {
     return active;
 }
 
-std::string Player::getName() {
+std::string Player::getName() const {
     return name;
 }
 

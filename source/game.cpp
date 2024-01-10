@@ -270,6 +270,81 @@ void Game::sendMap(Player &player){
      SendMessageToClient("end of map", player.getSockfd());
 }
 
+bool is_number(const std::string& s) {
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) ++it;
+    return !s.empty() && it == s.end();
+}
+
+void Game::handlePlayerUseSkill(Player &player) {
+     std::vector<Card> skills = player.getSkills();
+     const int playerSockfd = player.getSockfd();
+     const std::string playerName = player.getName();
+     SendMessageToClient(
+          "你有以下技能，請輸入 " + std::to_string(0) + "~" + std::to_string(skills.size()-1) + "以選擇欲使用的技能", 
+          playerSockfd
+     );
+     for (int i = 0; i < skills.size(); i++) {
+          // if card is c-1, player have to in the jail when use this card.
+          if (skills[i].getId() == "c-1" && player.getJailDuration() == 0) continue;
+          SendMessageToClient(std::to_string(i) + ". " + skills[i].getName(), playerSockfd);
+     }
+
+     std::string inp = ReadMessageFromClient(playerSockfd);
+     // No one can have more than 9 skills 
+     int index = -1;
+     if (isdigit(inp[0])) index = inp[0] - '0';
+     if (index >= 0 && index < skills.size()) {
+          Card skill = skills[index];
+          player.removeSkill(index);
+
+          std::string skillId = skill.getId();
+          std::string skillName = skill.getName();
+
+          SendMessageToAllClients(playerName + "使用了技能：" + skillName);
+
+          if (skillId == "c-1" && player.getJailDuration() > 0) {
+               player.setJailDuration(0);
+               player.setPartyLevel(player.getPartyLevel() + 1);
+               SendMessageToAllClients(playerName + "離開了監獄，並且獲得獄中人脈，政黨階級+1。");
+          } else if (skillId == "c-2") {
+               SendMessageToClient("請輸入你想攻擊的玩家編號：", playerSockfd);
+               int targetId = ReadMessageFromClient(playerSockfd)[0] - '0'; // modify if player number > 10
+               if (targetId >= 0 && targetId < players.size()) {
+                    Player &target = players[targetId-1];
+                    target.setPartyLevel(std::max(0,target.getPartyLevel() - 1)); // party level cannot be negative
+                    SendMessageToAllClients(playerName + "攻擊了" + target.getName() + "，使其政黨階級 -1。");
+               }
+          } else if (skillId == "c-3") {
+               SendMessageToClient("請輸入你想攻擊的格子編號：", playerSockfd);
+               std::string inp = ReadMessageFromClient(playerSockfd);
+               if (is_number(inp) && stoi(inp) >= 0 && stoi(inp) < this->map.size()) {
+                    int targetId = stoi(inp);
+                    Grid &target = map[targetId];
+                    int ownerId = target.getOwner();
+                    if (ownerId == 0) {
+                         SendMessageToAllClients(playerName + "攻擊了" + target.getName() + "，但是沒有人擁有這塊土地。");
+                         return;
+                    } else {
+                         target.reset();
+                         this->players[ownerId-1].addHelth(-50);
+                         SendMessageToAllClients(playerName + "攻擊了" + target.getName() + "，使其建築物夷平。");
+                         SendMessageToAllClients(this->players[ownerId-1].getName() + "受到了攻擊，生命值減少 50。");
+                    }
+               }
+          } else if (skillId == "c-4") {
+               SendMessageToClient("請輸入你想攻擊的玩家編號：", playerSockfd);
+               std::string inp = ReadMessageFromClient(playerSockfd);
+               if (is_number(inp) && stoi(inp) >= 0 && stoi(inp) < this->players.size()) {  
+                    int targetId = stoi(inp); 
+                    Player &target = players[targetId-1];
+                    target.addHelth(-20);
+                    SendMessageToAllClients(playerName + "攻擊了" + target.getName() + "，使其生命值減少 20。");
+               }
+          }
+     }
+}
+
 void Game::playerTurn(Player& player) {
      int playerSockfd = player.getSockfd();
      const std::string playerName = player.getName();
@@ -331,7 +406,8 @@ void Game::playerTurn(Player& player) {
                 break;
      }
 
-     // playerUseSkill(player);
+     if (player.getSkills().size() > 0)
+          handlePlayerUseSkill(player);
 }
 
 void Game::endTurn(Player& player) {
