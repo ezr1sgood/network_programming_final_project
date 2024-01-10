@@ -65,6 +65,9 @@ void Player::setPartyLevel(const int _party_level) {
     this->party_level = _party_level;
 }
 
+void Player::setActive(const bool _active) {
+    this->active = _active;
+}
 
 // Get functions
 int Player::getHelth() {

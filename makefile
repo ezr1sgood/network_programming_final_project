@@ -42,7 +42,7 @@ server: $(EXE)
 
 $(EXE): dirs $(OBJS)
 	$(CXX) $(OBJS) -o $@
-	$(CXX) $(ODIR)/client.o -o $(BDIR)/client $(L_FLAGS)
+	$(CXX) $(ODIR)/client.o -o $(BDIR)/client
 	
 -include $(DEPS)
 

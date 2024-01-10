@@ -101,6 +101,10 @@ void Game::victory(Player& player) {
      exit(0);
 }
 
+void Game::defeat(Player& player) {
+     player.setActive(false);
+}
+
 void Game::addPlayer(std::string name, int id, int sockfd) {
      this->players.push_back(Player(name, id, sockfd));
 }
@@ -168,6 +172,7 @@ void Game::handlePartyEvent(Player& player, int partyId){
      } else {
           if (playerParty == 0) {
                SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName, player.getSockfd());
+               SendMessageToClient( "輸入 Y 支付，輸入 N 放棄。", player.getSockfd());
           } else {
                SendMessageToClient( "你現在已經有政黨了，但你仍然可以支付政治獻金轉換政黨。", player.getSockfd());
                SendMessageToClient( "支付 500 政治獻金，可以加入" + partyName, player.getSockfd());
@@ -333,6 +338,22 @@ void Game::endTurn(Player& player) {
      SendMessageToAllClients("--------------------------");
 }
 
+void Game::checkPlayerStatus() {
+     for (auto &player : this->players) {
+          const std::string playerName = player.getName();
+          if (player.getHelth() <= 0) {
+               SendMessageToAllClients(playerName + "死亡，遭到淘汰。");
+               defeat(player);
+          } else if (player.getMoney() < 0) {
+               SendMessageToAllClients(playerName + "破產，遭到淘汰。");
+               defeat(player);
+               player.setActive(false);
+          } else if (player.getPartyLevel() == 3) {
+               victory(player);
+          }
+     }
+}
+
 void Game::run() {
      if (players.empty()) {
           std::cerr << "No player." << std::endl;
@@ -343,21 +364,25 @@ void Game::run() {
           SendMessageToAllClients("Round " + std::to_string(Round));
           sendStatus();
           for(auto &player: this->players){
-
+               if (player.getActive() == false) 
+                    continue;
                sendMap(player);
           }
           for (auto &player : this->players) {
+               if (player.getActive() == false) 
+                    continue;
                playerTurn(player);
                endTurn(player);
           }
-          if (Round == 2) {
-               sendStatus();
-               for(auto &player: this->players){
+          checkPlayerStatus();
+          // if (Round == 2) {
+          //      sendStatus();
+          //      for(auto &player: this->players){
 
-                    sendMap(player);
-               }
-               SendMessageToAllClients("Game end.");
-               break;
-          }
+          //           sendMap(player);
+          //      }
+          //      SendMessageToAllClients("Game end.");
+          //      break;
+          // }
      }
 }

@@ -19,12 +19,14 @@ public:
     std::string ReadMessageFromClient(int sockfd);
 
     void run();
-    void victory(Player& player);
     void addPlayer(std::string name, int id, int sockfd);
     void playerGetChance(Player& player);
     void playerGetDensity(Player& player);
     void playerTurn(Player& player);
     void endTurn(Player& player);
+    void checkPlayerStatus();
+    void victory(Player& player);
+    void defeat(Player& player);
 
     void handlePartyEvent(Player&, const int partyType);
     void handleRealEstateEvent(Player&, Grid&);

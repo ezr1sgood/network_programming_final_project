@@ -29,6 +29,7 @@ public:
     void setJailDuration(const int);
     void setParty(const int);
     void setPartyLevel(const int);
+    void setActive(const bool);
     
     // Get functions
     int getHelth();
