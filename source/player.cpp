@@ -9,7 +9,7 @@ Player::Player() {}
 Player::Player(std::string name, int id, int sockfd) {
     this->name = name;
     this->helth = 100;
-    this->money = 1000;
+    this->money = 5000;
     this->location = 0;
     this->party = 0;
     this->party_level = 0;
